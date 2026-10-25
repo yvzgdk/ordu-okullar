@@ -189,10 +189,6 @@ export default function SidebarLayout({ children }) {
               <span className="breadcrumb-root">
                 <i className="fas fa-home me-1"></i> Ordu OFP
               </span>
-              <i className="fas fa-chevron-right text-muted separator"></i>
-              <span className="breadcrumb-current">
-                {router.pathname === '/' ? 'Genel Bakış' : router.pathname.split('/').filter(Boolean).join(' / ')}
-              </span>
             </div>
           </div>
 
