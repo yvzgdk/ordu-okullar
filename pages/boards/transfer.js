@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import Link from 'next/link';
 import { supabase } from '../../lib/supabase';
 import { Container, Card, Row, Col, Form, Button, Alert, Spinner, Table, ListGroup, Badge } from 'react-bootstrap';
 
@@ -130,10 +131,23 @@ export default function BoardTransferPage() {
     return inst ? `${inst.name}${inst.code ? ' (' + inst.code + ')' : ''}` : '-';
   };
 
+  const getDistrictName = (districtId) => {
+    const d = districts.find(item => String(item.id) === String(districtId));
+    return d ? d.name : '-';
+  };
+
   const getBoardTypeLabel = (key) => {
     const t = BOARD_TYPES.find(t => t.key === key);
     return t ? t.label : key;
   };
+
+  const selectedSourceInst = useMemo(() => {
+    return institutions.find(i => String(i.id) === String(sourceId));
+  }, [institutions, sourceId]);
+
+  const selectedTargetInst = useMemo(() => {
+    return institutions.find(i => String(i.id) === String(targetId));
+  }, [institutions, targetId]);
 
   const filteredSourceInstitutions = useMemo(() => {
     return institutions.filter(inst => {
@@ -282,7 +296,7 @@ export default function BoardTransferPage() {
     }
     
     setLoading(false);
-    setSuccessMsg('Tahta transferi başarıyla gerçekleşti!');
+    setSuccessMsg('Tahta transfer işlemi başarıyla tamamlandı!');
     
     // Refresh the surplus boards
     setTargetId('');
@@ -295,206 +309,346 @@ export default function BoardTransferPage() {
     setTargetKat('');
     setTargetSinif('');
     
-    // To trigger source surplus boards re-fetch:
     const temp = sourceId;
     setSourceId('');
     setTimeout(() => setSourceId(temp), 50);
   };
 
   return (
-    <Container className="py-4">
-      <Card className="shadow-lg mx-auto border-0" style={{ maxWidth: 900, background: 'linear-gradient(135deg, #f6faff 0%, #eaf1fb 100%)' }}>
-        <Card.Body className="p-4">
-          <div className="d-flex align-items-center mb-4 gap-3">
-            <span className="rounded-circle bg-success bg-gradient d-flex align-items-center justify-content-center shadow" style={{ width: 54, height: 54 }}>
-              <i className="fas fa-random fa-2x text-white"></i>
-            </span>
-            <h3 className="fw-bold text-success mb-0" style={{ letterSpacing: '0.5px' }}>Tahta Transfer</h3>
+    <Container fluid className="px-0">
+      {/* ─── Modern Sayfa Başlığı ─── */}
+      <div className="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+        <div className="d-flex align-items-center gap-3">
+          <span className="rounded-3 bg-success-soft d-flex align-items-center justify-content-center shadow-sm" style={{ width: 48, height: 48, fontSize: '1.25rem' }}>
+            <i className="fas fa-arrows-split-up-and-left text-success"></i>
+          </span>
+          <div>
+            <h4 className="fw-bold mb-0 text-dark">Okullar Arası Tahta Transferi</h4>
+            <span className="text-muted small">Kurumlardaki fazlalık etkileşimli tahtaların ihtiyaç sahibi okullara resmi devir işlemi</span>
           </div>
-          <Form onSubmit={handleSubmit}>
-            {errorMsg && <Alert variant="danger">{errorMsg}</Alert>}
-            {successMsg && <Alert variant="success">{successMsg}</Alert>}
-            
-            <Row className="mb-4">
-               {/* Kaynak Kurum */}
-               <Col md={12}>
-                  <Form.Group style={{ position: 'relative' }}>
-                    <Form.Label className="fw-bold mb-3"><i className="fas fa-arrow-circle-left text-danger me-2"></i>Tahtanın Alınacağı Kurum (Fazlalık Tahtalar Aranır)</Form.Label>
-                    
-                    <Row className="g-3 mb-2">
-                      <Col md={4}>
-                        <Form.Group>
-                          <Form.Label className="mb-1 text-muted" style={{fontSize: '0.9rem'}}>İlçe</Form.Label>
-                          <Form.Select
-                            value={filterSourceDistrict}
-                            onChange={e => { setFilterSourceDistrict(e.target.value); setShowSourceList(true); setSourceId(''); }}
-                            className="form-select"
-                            disabled={loading}
-                          >
-                            <option value="">Tümü</option>
-                            {districts.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-                          </Form.Select>
-                        </Form.Group>
-                      </Col>
-                      <Col md={4}>
-                        <Form.Group>
-                          <Form.Label className="mb-1 text-muted" style={{fontSize: '0.9rem'}}>Kurum Kodu</Form.Label>
-                          <Form.Control
-                            type="text"
-                            placeholder="Kod ile ara..."
-                            value={filterSourceCode}
-                            onChange={e => { setFilterSourceCode(e.target.value); setShowSourceList(true); setSourceId(''); }}
-                            className="form-control"
-                            onFocus={() => setShowSourceList(true)}
-                            disabled={loading}
-                          />
-                        </Form.Group>
-                      </Col>
-                      <Col md={4}>
-                        <Form.Group>
-                          <Form.Label className="mb-1 text-muted" style={{fontSize: '0.9rem'}}>Kurum Adı</Form.Label>
-                          <Form.Control
-                            type="text"
-                            placeholder="Ad ile ara..."
-                            value={filterSourceName}
-                            onChange={e => { setFilterSourceName(e.target.value); setShowSourceList(true); setSourceId(''); }}
-                            className="form-control"
-                            onFocus={() => setShowSourceList(true)}
-                            disabled={loading}
-                          />
-                        </Form.Group>
-                      </Col>
-                    </Row>
+        </div>
+        <div className="d-flex align-items-center gap-2">
+          <Link href="/tahtalar/liste" className="btn btn-outline-secondary btn-sm rounded-pill px-3 d-inline-flex align-items-center gap-2">
+            <i className="fas fa-list-check"></i>
+            <span>Tahta Listesi</span>
+          </Link>
+          <Link href="/tahtalar/ekle" className="btn btn-primary-soft btn-sm rounded-pill px-3 d-inline-flex align-items-center gap-2">
+            <i className="fas fa-plus-circle"></i>
+            <span>Yeni Tahta Ekle</span>
+          </Link>
+        </div>
+      </div>
 
-                    {showSourceList && (filterSourceDistrict || filterSourceCode || filterSourceName) && filteredSourceInstitutions.length > 0 && (
-                      <ListGroup style={{ position: 'absolute', zIndex: 10, width: '100%', maxHeight: 260, overflowY: 'auto', boxShadow: '0 4px 16px #0001', top: '100%' }}>
-                        {filteredSourceInstitutions.slice(0, 20).map(inst => (
-                          <ListGroup.Item
-                            key={inst.id}
-                            action
-                            active={String(sourceId) === String(inst.id)}
-                            onClick={() => {
-                              setSourceId(inst.id);
-                              setFilterSourceDistrict(inst.district_id || '');
-                              setFilterSourceCode(inst.code || '');
-                              setFilterSourceName(inst.name || '');
-                              setShowSourceList(false);
-                            }}
-                            className="d-flex align-items-center gap-2"
-                          >
-                            <i className="fas fa-school text-primary"></i>
-                            <span>{inst.name} {inst.code ? <span className="text-muted">({inst.code})</span> : ''}</span>
-                          </ListGroup.Item>
-                        ))}
-                      </ListGroup>
-                    )}
-                  </Form.Group>
-               </Col>
-            </Row>
+      {errorMsg && (
+        <Alert variant="danger" dismissible onClose={() => setErrorMsg('')} className="rounded-3 shadow-sm border-0 mb-4">
+          <i className="fas fa-triangle-exclamation me-2"></i>{errorMsg}
+        </Alert>
+      )}
+      {successMsg && (
+        <Alert variant="success" dismissible onClose={() => setSuccessMsg('')} className="rounded-3 shadow-sm border-0 mb-4">
+          <i className="fas fa-circle-check me-2"></i>{successMsg}
+        </Alert>
+      )}
 
-            {/* Surplus Boards Listing */}
-            {sourceId && (
-               <div className="mb-4 p-3 bg-white border rounded shadow-sm">
-                  <h6 className="fw-bold text-secondary mb-3">Seçilen Kurumdaki Fazlalık Tahtalar <Badge bg="danger">{surplusBoards.length}</Badge></h6>
-                  {loadingBoards ? (
-                    <Spinner animation="border" size="sm" /> 
-                  ) : surplusBoards.length > 0 ? (
-                    <div className="table-responsive" style={{ maxHeight: '250px' }}>
-                        <Table size="sm" striped hover bordered className="mb-0">
-                           <thead className="table-light sticky-top">
-                              <tr>
-                                 <th style={{ width: '40px' }} className="text-center">
-                                    <Form.Check 
-                                       type="checkbox" 
-                                       checked={selectedBoardIds.length === surplusBoards.length && surplusBoards.length > 0} 
-                                       onChange={handleSelectAll} 
-                                    />
-                                 </th>
-                                 <th>Bina / Kat</th>
-                                 <th>Sınıf / Lab</th>
-                                 <th>ET Tipi</th>
-                                 <th>Boyut / Yön</th>
-                              </tr>
-                           </thead>
-                           <tbody>
-                              {surplusBoards.map(b => (
-                                 <tr key={b.id}>
-                                    <td className="text-center align-middle">
-                                       <Form.Check 
-                                          type="checkbox" 
-                                          checked={selectedBoardIds.includes(b.id)} 
-                                          onChange={() => handleBoardToggle(b.id)} 
-                                       />
-                                    </td>
-                                    <td className="align-middle">{b.bina || '-'} / {b.kat || '-'}</td>
-                                    <td className="align-middle">{b.sinif_lab || '-'}</td>
-                                    <td className="align-middle">{b.et_tipi}</td>
-                                    <td className="align-middle">{b.et_boyutu} / {b.et_yonu}</td>
-                                 </tr>
-                              ))}
-                           </tbody>
-                        </Table>
-                    </div>
-                  ) : (
-                    <Alert variant="info" className="mb-0">Bu kuruma ait "Fazlalık" durumunda kayıtlı etkileşimli tahta bulunmamaktadır.</Alert>
-                  )}
-               </div>
-            )}
-
-            {/* Hedef Kurum */}
-            <Row className="mb-4 mt-2">
-              <Col md={12}>
-                <Form.Group style={{ position: 'relative' }}>
-                  <Form.Label className="fw-bold mb-3"><i className="fas fa-arrow-circle-right text-success me-2"></i>Tahtanın Gönderileceği Kurum</Form.Label>
-                  
-                  <Row className="g-3 mb-2">
+      <Form onSubmit={handleSubmit}>
+        <Row className="g-4">
+          {/* ─── 1. BÖLÜM: KAYNAK KURUM (TAHTANIN ALINACAĞI OKUL) ─── */}
+          <Col lg={12}>
+            <div className="form-section-card">
+              <div className="form-section-header">
+                <div className="d-flex align-items-center gap-2">
+                  <span className="section-icon-badge bg-danger-soft">
+                    <i className="fas fa-arrow-up-from-bracket text-danger"></i>
+                  </span>
+                  <div>
+                    <div className="section-title">1. Kaynak Kurum (Tahtanın Alınacağı Okul)</div>
+                    <div className="text-muted small">Fazlalık durumunda etkileşimli tahtası bulunan okulu seçiniz</div>
+                  </div>
+                </div>
+                <span className="badge-pill badge-pill-danger">Veren Okul</span>
+              </div>
+              <div className="p-4">
+                <div className="position-relative">
+                  <Row className="g-3 mb-3">
                     <Col md={4}>
-                      <Form.Group>
-                        <Form.Label className="mb-1 text-muted" style={{fontSize: '0.9rem'}}>İlçe</Form.Label>
+                      <Form.Floating>
                         <Form.Select
-                          value={filterTargetDistrict}
-                          onChange={e => { setFilterTargetDistrict(e.target.value); setShowTargetList(true); setTargetId(''); }}
-                          className="form-select"
-                          disabled={!sourceId || surplusBoards.length === 0}
+                          id="filterSourceDistrict"
+                          value={filterSourceDistrict}
+                          onChange={e => { setFilterSourceDistrict(e.target.value); setShowSourceList(true); setSourceId(''); }}
+                          disabled={loading}
                         >
-                          <option value="">Tümü</option>
+                          <option value="">Tüm İlçeler</option>
                           {districts.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
                         </Form.Select>
-                      </Form.Group>
+                        <label htmlFor="filterSourceDistrict">
+                          <i className="fas fa-map-marker-alt me-2 text-muted"></i>İlçe Filtresi
+                        </label>
+                      </Form.Floating>
                     </Col>
                     <Col md={4}>
-                      <Form.Group>
-                        <Form.Label className="mb-1 text-muted" style={{fontSize: '0.9rem'}}>Kurum Kodu</Form.Label>
+                      <Form.Floating>
                         <Form.Control
                           type="text"
-                          placeholder="Kod ile ara..."
-                          value={filterTargetCode}
-                          onChange={e => { setFilterTargetCode(e.target.value); setShowTargetList(true); setTargetId(''); }}
-                          className="form-control"
-                          onFocus={() => setShowTargetList(true)}
-                          disabled={!sourceId || surplusBoards.length === 0}
+                          id="filterSourceCode"
+                          placeholder="Kurum Kodu ile ara"
+                          value={filterSourceCode}
+                          onChange={e => { setFilterSourceCode(e.target.value); setShowSourceList(true); setSourceId(''); }}
+                          onFocus={() => setShowSourceList(true)}
+                          disabled={loading}
                         />
-                      </Form.Group>
+                        <label htmlFor="filterSourceCode">
+                          <i className="fas fa-barcode me-2 text-muted"></i>Kurum Kodu Ara
+                        </label>
+                      </Form.Floating>
                     </Col>
                     <Col md={4}>
-                      <Form.Group>
-                        <Form.Label className="mb-1 text-muted" style={{fontSize: '0.9rem'}}>Kurum Adı</Form.Label>
+                      <Form.Floating>
                         <Form.Control
                           type="text"
-                          placeholder="Ad ile ara..."
-                          value={filterTargetName}
-                          onChange={e => { setFilterTargetName(e.target.value); setShowTargetList(true); setTargetId(''); }}
-                          className="form-control"
-                          onFocus={() => setShowTargetList(true)}
-                          disabled={!sourceId || surplusBoards.length === 0}
+                          id="filterSourceName"
+                          placeholder="Kurum Adı ile ara"
+                          value={filterSourceName}
+                          onChange={e => { setFilterSourceName(e.target.value); setShowSourceList(true); setSourceId(''); }}
+                          onFocus={() => setShowSourceList(true)}
+                          disabled={loading}
                         />
-                      </Form.Group>
+                        <label htmlFor="filterSourceName">
+                          <i className="fas fa-school me-2 text-muted"></i>Kurum Adı Ara
+                        </label>
+                      </Form.Floating>
                     </Col>
                   </Row>
 
+                  {/* Sonuç Açılır Listesi */}
+                  {showSourceList && (filterSourceDistrict || filterSourceCode || filterSourceName) && filteredSourceInstitutions.length > 0 && (
+                    <ListGroup className="position-absolute shadow-lg border rounded-3 overflow-hidden" style={{ zIndex: 1050, width: '100%', maxHeight: 280, overflowY: 'auto', top: '100%' }}>
+                      {filteredSourceInstitutions.slice(0, 25).map(inst => (
+                        <ListGroup.Item
+                          key={inst.id}
+                          action
+                          active={String(sourceId) === String(inst.id)}
+                          onClick={() => {
+                            setSourceId(inst.id);
+                            setFilterSourceDistrict(inst.district_id || '');
+                            setFilterSourceCode(inst.code || '');
+                            setFilterSourceName(inst.name || '');
+                            setShowSourceList(false);
+                          }}
+                          className="d-flex align-items-center justify-content-between py-2 px-3"
+                        >
+                          <div className="d-flex align-items-center gap-2">
+                            <i className="fas fa-school text-primary"></i>
+                            <span className="fw-semibold text-dark">{inst.name}</span>
+                          </div>
+                          <div className="d-flex align-items-center gap-2">
+                            <span className="badge bg-light text-muted border">{getDistrictName(inst.district_id)}</span>
+                            {inst.code && <span className="badge-pill badge-pill-info font-monospace">{inst.code}</span>}
+                          </div>
+                        </ListGroup.Item>
+                      ))}
+                    </ListGroup>
+                  )}
+                </div>
+
+                {/* Seçilen Kaynak Kurum Rozeti / Bilgi Kartı */}
+                {selectedSourceInst && (
+                  <div className="d-flex align-items-center justify-content-between p-3 rounded-3 bg-light border mt-3 flex-wrap gap-2">
+                    <div className="d-flex align-items-center gap-3">
+                      <div className="avatar-mini bg-primary-soft text-primary" style={{ width: 40, height: 40, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <i className="fas fa-check"></i>
+                      </div>
+                      <div>
+                        <div className="fw-bold text-dark">{selectedSourceInst.name}</div>
+                        <div className="text-muted small">
+                          İlçe: <strong>{getDistrictName(selectedSourceInst.district_id)}</strong> | Kurum Kodu: <strong>{selectedSourceInst.code || '-'}</strong>
+                        </div>
+                      </div>
+                    </div>
+                    <Button 
+                      variant="outline-secondary" 
+                      size="sm" 
+                      className="rounded-pill px-3"
+                      onClick={() => {
+                        setSourceId('');
+                        setFilterSourceCode('');
+                        setFilterSourceName('');
+                      }}
+                    >
+                      <i className="fas fa-xmark me-1"></i> Değiştir
+                    </Button>
+                  </div>
+                )}
+
+                {/* Seçilen Kurumdaki Fazlalık Tahtalar Tablosu */}
+                {sourceId && (
+                  <div className="mt-4 pt-3 border-top">
+                    <div className="d-flex align-items-center justify-content-between mb-3">
+                      <div className="d-flex align-items-center gap-2">
+                        <i className="fas fa-chalkboard text-warning"></i>
+                        <span className="fw-bold text-dark">Bu Okuldaki Fazlalık Tahtalar</span>
+                        <span className={`badge-pill ${surplusBoards.length > 0 ? 'badge-pill-success' : 'badge-pill-warning'}`}>
+                          {surplusBoards.length} Adet
+                        </span>
+                      </div>
+                      {surplusBoards.length > 0 && (
+                        <div className="d-flex align-items-center gap-2">
+                          <Button 
+                            variant="outline-primary" 
+                            size="sm" 
+                            onClick={handleSelectAll} 
+                            className="rounded-pill px-3"
+                          >
+                            <i className="fas fa-check-double me-1"></i>
+                            {selectedBoardIds.length === surplusBoards.length ? 'Seçimi Kaldır' : 'Tümünü Seç'}
+                          </Button>
+                          <span className="badge bg-primary px-3 py-2 rounded-pill">
+                            {selectedBoardIds.length} Seçildi
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {loadingBoards ? (
+                      <div className="text-center py-4 text-muted">
+                        <Spinner animation="border" size="sm" className="me-2" />
+                        <span>Fazlalık tahtalar yükleniyor...</span>
+                      </div>
+                    ) : surplusBoards.length > 0 ? (
+                      <div className="table-responsive rounded-3 border">
+                        <Table hover className="align-middle mb-0">
+                          <thead className="bg-light">
+                            <tr>
+                              <th style={{ width: '48px' }} className="text-center">
+                                <Form.Check 
+                                  type="checkbox" 
+                                  checked={selectedBoardIds.length === surplusBoards.length && surplusBoards.length > 0} 
+                                  onChange={handleSelectAll} 
+                                />
+                              </th>
+                              <th>Bina & Kat</th>
+                              <th>Sınıf / Lab</th>
+                              <th>ET Tipi (Model)</th>
+                              <th>Boyut / Yön</th>
+                              <th>Durum</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {surplusBoards.map(b => (
+                              <tr 
+                                key={b.id} 
+                                style={{ cursor: 'pointer' }}
+                                onClick={() => handleBoardToggle(b.id)}
+                                className={selectedBoardIds.includes(b.id) ? 'table-primary' : ''}
+                              >
+                                <td className="text-center" onClick={e => e.stopPropagation()}>
+                                  <Form.Check 
+                                    type="checkbox" 
+                                    checked={selectedBoardIds.includes(b.id)} 
+                                    onChange={() => handleBoardToggle(b.id)} 
+                                  />
+                                </td>
+                                <td>
+                                  <span className="fw-semibold text-dark">{b.bina || 'Ana Bina'}</span>
+                                  <span className="text-muted small ms-1">({b.kat || '-'})</span>
+                                </td>
+                                <td>{b.sinif_lab || '-'}</td>
+                                <td>
+                                  <span className="badge bg-light text-dark border font-monospace">{b.et_tipi}</span>
+                                </td>
+                                <td>{b.et_boyutu || '-'} / {b.et_yonu || '-'}</td>
+                                <td>
+                                  <span className="badge-pill badge-pill-warning">Fazlalık</span>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </Table>
+                      </div>
+                    ) : (
+                      <Alert variant="warning" className="rounded-3 border-0 shadow-none mb-0">
+                        <i className="fas fa-circle-info me-2"></i>
+                        Seçilen bu kurumda <strong>Fazlalık</strong> statüsünde kayıtlı etkileşimli tahta bulunamadı. Tahtaları transfer edebilmek için önce "Kurum Tahta Listesi" ekranından tahtanın durumunu <em>"Fazlalık"</em> olarak güncellemelisiniz.
+                      </Alert>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          </Col>
+
+          {/* ─── 2. BÖLÜM: HEDEF KURUM (TAHTANIN GÖNDERİLECEĞİ OKUL) ─── */}
+          <Col lg={12}>
+            <div className="form-section-card">
+              <div className="form-section-header">
+                <div className="d-flex align-items-center gap-2">
+                  <span className="section-icon-badge bg-success-soft">
+                    <i className="fas fa-arrow-down-to-bracket text-success"></i>
+                  </span>
+                  <div>
+                    <div className="section-title">2. Hedef Kurum (Tahtanın Gönderileceği Okul)</div>
+                    <div className="text-muted small">Tahtaların yeni kurulumunun yapılacağı ihtiyaç sahibi okulu seçiniz</div>
+                  </div>
+                </div>
+                <span className="badge-pill badge-pill-success">Alan Okul</span>
+              </div>
+              <div className="p-4">
+                <div className="position-relative">
+                  <Row className="g-3 mb-3">
+                    <Col md={4}>
+                      <Form.Floating>
+                        <Form.Select
+                          id="filterTargetDistrict"
+                          value={filterTargetDistrict}
+                          onChange={e => { setFilterTargetDistrict(e.target.value); setShowTargetList(true); setTargetId(''); }}
+                          disabled={!sourceId || surplusBoards.length === 0}
+                        >
+                          <option value="">Tüm İlçeler</option>
+                          {districts.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                        </Form.Select>
+                        <label htmlFor="filterTargetDistrict">
+                          <i className="fas fa-map-marker-alt me-2 text-muted"></i>Hedef İlçe Filtresi
+                        </label>
+                      </Form.Floating>
+                    </Col>
+                    <Col md={4}>
+                      <Form.Floating>
+                        <Form.Control
+                          type="text"
+                          id="filterTargetCode"
+                          placeholder="Kurum Kodu ile ara"
+                          value={filterTargetCode}
+                          onChange={e => { setFilterTargetCode(e.target.value); setShowTargetList(true); setTargetId(''); }}
+                          onFocus={() => setShowTargetList(true)}
+                          disabled={!sourceId || surplusBoards.length === 0}
+                        />
+                        <label htmlFor="filterTargetCode">
+                          <i className="fas fa-barcode me-2 text-muted"></i>Hedef Kurum Kodu
+                        </label>
+                      </Form.Floating>
+                    </Col>
+                    <Col md={4}>
+                      <Form.Floating>
+                        <Form.Control
+                          type="text"
+                          id="filterTargetName"
+                          placeholder="Kurum Adı ile ara"
+                          value={filterTargetName}
+                          onChange={e => { setFilterTargetName(e.target.value); setShowTargetList(true); setTargetId(''); }}
+                          onFocus={() => setShowTargetList(true)}
+                          disabled={!sourceId || surplusBoards.length === 0}
+                        />
+                        <label htmlFor="filterTargetName">
+                          <i className="fas fa-school me-2 text-muted"></i>Hedef Kurum Adı
+                        </label>
+                      </Form.Floating>
+                    </Col>
+                  </Row>
+
+                  {/* Sonuç Açılır Listesi */}
                   {showTargetList && (filterTargetDistrict || filterTargetCode || filterTargetName) && filteredTargetInstitutions.length > 0 && (
-                    <ListGroup style={{ position: 'absolute', zIndex: 10, width: '100%', maxHeight: 260, overflowY: 'auto', boxShadow: '0 4px 16px #0001', top: '100%' }}>
-                      {filteredTargetInstitutions.slice(0, 20).map(inst => (
+                    <ListGroup className="position-absolute shadow-lg border rounded-3 overflow-hidden" style={{ zIndex: 1050, width: '100%', maxHeight: 280, overflowY: 'auto', top: '100%' }}>
+                      {filteredTargetInstitutions.slice(0, 25).map(inst => (
                         <ListGroup.Item
                           key={inst.id}
                           action
@@ -506,144 +660,252 @@ export default function BoardTransferPage() {
                             setFilterTargetName(inst.name || '');
                             setShowTargetList(false);
                           }}
-                          className="d-flex align-items-center gap-2"
+                          className="d-flex align-items-center justify-content-between py-2 px-3"
                         >
-                          <i className="fas fa-school text-primary"></i>
-                          <span>{inst.name} {inst.code ? <span className="text-muted">({inst.code})</span> : ''}</span>
+                          <div className="d-flex align-items-center gap-2">
+                            <i className="fas fa-school text-success"></i>
+                            <span className="fw-semibold text-dark">{inst.name}</span>
+                          </div>
+                          <div className="d-flex align-items-center gap-2">
+                            <span className="badge bg-light text-muted border">{getDistrictName(inst.district_id)}</span>
+                            {inst.code && <span className="badge-pill badge-pill-info font-monospace">{inst.code}</span>}
+                          </div>
                         </ListGroup.Item>
                       ))}
                     </ListGroup>
                   )}
-                </Form.Group>
-              </Col>
-            </Row>
+                </div>
 
-            {/* ET Kurulum Bilgileri */}
-            {targetId && (
-            <Row className="mb-4">
-              <Col md={12}>
-                <div className="p-3 border rounded bg-white shadow-sm">
-                  <h6 className="fw-bold text-primary mb-3"><i className="fas fa-hammer me-2"></i>ET'nin Kurulacağı Yer Bilgileri</h6>
+                {/* Seçilen Hedef Kurum Rozeti */}
+                {selectedTargetInst && (
+                  <div className="d-flex align-items-center justify-content-between p-3 rounded-3 bg-light border mt-3 flex-wrap gap-2">
+                    <div className="d-flex align-items-center gap-3">
+                      <div className="avatar-mini bg-success-soft text-success" style={{ width: 40, height: 40, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <i className="fas fa-check"></i>
+                      </div>
+                      <div>
+                        <div className="fw-bold text-dark">{selectedTargetInst.name}</div>
+                        <div className="text-muted small">
+                          İlçe: <strong>{getDistrictName(selectedTargetInst.district_id)}</strong> | Kurum Kodu: <strong>{selectedTargetInst.code || '-'}</strong>
+                        </div>
+                      </div>
+                    </div>
+                    <Button 
+                      variant="outline-secondary" 
+                      size="sm" 
+                      className="rounded-pill px-3"
+                      onClick={() => {
+                        setTargetId('');
+                        setFilterTargetCode('');
+                        setFilterTargetName('');
+                      }}
+                    >
+                      <i className="fas fa-xmark me-1"></i> Değiştir
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </Col>
+
+          {/* ─── 3. BÖLÜM: YERLEŞİM & RESMİ YAZI BİLGİLERİ ─── */}
+          {targetId && (
+            <Col lg={12}>
+              <div className="form-section-card">
+                <div className="form-section-header">
+                  <div className="d-flex align-items-center gap-2">
+                    <span className="section-icon-badge bg-info-soft">
+                      <i className="fas fa-file-signature text-info"></i>
+                    </span>
+                    <div>
+                      <div className="section-title">3. Yeni Kurulum Yeri & Resmi Evrak Bilgileri</div>
+                      <div className="text-muted small">Tahtaların hedef okuldaki yerleşimi ve resmi onay evrakı</div>
+                    </div>
+                  </div>
+                  <span className="badge-pill badge-pill-info">Kurulum & Onay</span>
+                </div>
+                <div className="p-4">
                   <Row className="g-3">
                     <Col md={4}>
-                      <Form.Group>
-                        <Form.Label className="mb-1 text-muted" style={{fontSize: '0.9rem'}}>Bina</Form.Label>
-                        <Form.Select value={targetBina} onChange={e => setTargetBina(e.target.value)}>
-                          <option value="">Seçiniz</option>
+                      <Form.Floating>
+                        <Form.Select 
+                          id="targetBina"
+                          value={targetBina} 
+                          onChange={e => setTargetBina(e.target.value)}
+                        >
+                          <option value="">Seçiniz (Varsayılan: Ana Bina)</option>
                           <option value="Ana Bina">Ana Bina</option>
                           <option value="Ek Bina">Ek Bina</option>
                         </Form.Select>
-                      </Form.Group>
+                        <label htmlFor="targetBina">
+                          <i className="fas fa-building me-2 text-muted"></i>Kurulacak Bina
+                        </label>
+                      </Form.Floating>
                     </Col>
                     <Col md={4}>
-                      <Form.Group>
-                        <Form.Label className="mb-1 text-muted" style={{fontSize: '0.9rem'}}>Kat</Form.Label>
-                        <Form.Select value={targetKat} onChange={e => setTargetKat(e.target.value)}>
+                      <Form.Floating>
+                        <Form.Select 
+                          id="targetKat"
+                          value={targetKat} 
+                          onChange={e => setTargetKat(e.target.value)}
+                        >
                           <option value="">Seçiniz</option>
                           {KAT_OPTIONS.map(ko => <option key={ko} value={ko}>{ko}</option>)}
                         </Form.Select>
-                      </Form.Group>
+                        <label htmlFor="targetKat">
+                          <i className="fas fa-stairs me-2 text-muted"></i>Kurulacak Kat
+                        </label>
+                      </Form.Floating>
                     </Col>
                     <Col md={4}>
-                      <Form.Group>
-                        <Form.Label className="mb-1 text-muted" style={{fontSize: '0.9rem'}}>Sınıf / Lab</Form.Label>
-                        <Form.Control type="text" placeholder="Örn: 9/A, Fen Lab" value={targetSinif} onChange={e => setTargetSinif(e.target.value)} />
-                      </Form.Group>
+                      <Form.Floating>
+                        <Form.Control 
+                          type="text" 
+                          id="targetSinif"
+                          placeholder="Örn: 9/A, Bilişim Lab" 
+                          value={targetSinif} 
+                          onChange={e => setTargetSinif(e.target.value)} 
+                        />
+                        <label htmlFor="targetSinif">
+                          <i className="fas fa-chalkboard-user me-2 text-muted"></i>Sınıf / Laboratuvar Adı
+                        </label>
+                      </Form.Floating>
+                    </Col>
+                    <Col md={6}>
+                      <Form.Floating>
+                        <Form.Control
+                          type="date"
+                          id="transferDate"
+                          value={transferDate}
+                          onChange={e => setTransferDate(e.target.value)}
+                          required
+                        />
+                        <label htmlFor="transferDate">
+                          <i className="fas fa-calendar-day me-2 text-muted"></i>Transfer Tarihi *
+                        </label>
+                      </Form.Floating>
+                    </Col>
+                    <Col md={6}>
+                      <Form.Floating>
+                        <Form.Control
+                          type="text"
+                          id="officialLetterNo"
+                          placeholder="Örn: E-12345678-903-8877"
+                          value={officialLetterNo}
+                          onChange={e => setOfficialLetterNo(e.target.value)}
+                          required
+                        />
+                        <label htmlFor="officialLetterNo">
+                          <i className="fas fa-file-lines me-2 text-muted"></i>Resmi Onay Yazı No *
+                        </label>
+                      </Form.Floating>
                     </Col>
                   </Row>
-                  <div className="mt-2 text-muted" style={{fontSize: '0.8rem'}}>
-                    * Boş bırakabilirsiniz. Birden fazla tahta seçili ise ayarlanan bu kısımlar tüm tahtalara uygulanacaktır.
+                  <div className="mt-3 text-muted small">
+                    <i className="fas fa-circle-info me-1 text-primary"></i>
+                    Bina, kat ve sınıf bilgileri isteğe bağlıdır; birden fazla tahta seçilmişse girilen yerleşim bilgileri seçilen tüm tahtalara uygulanacaktır.
                   </div>
                 </div>
-              </Col>
-            </Row>
-            )}
+              </div>
+            </Col>
+          )}
+        </Row>
 
-            {/* Tarih, Resmi Yazı ve Gönder */}
-            <Row className="g-3 align-items-end mb-3 mt-2">
-              <Col md={4}>
-                <Form.Group controlId="transferDate">
-                  <Form.Label className="fw-bold mb-1"><i className="fas fa-calendar-alt text-info me-2"></i>Transfer Tarihi</Form.Label>
-                  <Form.Control
-                    type="date"
-                    value={transferDate}
-                    onChange={e => setTransferDate(e.target.value)}
-                    required
-                    className="form-control-lg"
-                    style={{ fontSize: '1rem', fontFamily: 'inherit', fontWeight: 600 }}
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={4}>
-                <Form.Group controlId="officialLetterNo">
-                  <Form.Label className="fw-bold mb-1"><i className="fas fa-file-signature text-secondary me-2"></i>Resmi Yazı No</Form.Label>
-                  <Form.Control
-                    type="text"
-                    placeholder="Örn: 1234567"
-                    value={officialLetterNo}
-                    onChange={e => setOfficialLetterNo(e.target.value)}
-                    required
-                    className="form-control-lg"
-                    style={{ fontSize: '1rem', fontFamily: 'inherit', fontWeight: 600 }}
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={4} className="d-flex align-items-end justify-content-end gap-2">
-                <Button
-                  type="submit"
-                  variant="success"
-                  className="rounded-pill px-4 py-2 fw-bold fs-6 d-flex align-items-center gap-2 shadow w-100 justify-content-center"
-                  style={{ height: 48 }}
-                  disabled={loading || selectedBoardIds.length === 0}
-                >
-                  <i className="fas fa-random"></i> Gönder
-                  {loading && <Spinner animation="border" size="sm" className="ms-2" />}
-                </Button>
-              </Col>
-            </Row>
-          </Form>
-        </Card.Body>
-      </Card>
-      
-      {/* Transfer Geçmişi Tablosu */}
-      {(sourceId || targetId) && (
-        <Card className="shadow-sm mx-auto mt-4" style={{ maxWidth: 900 }}>
-          <Card.Body>
-            <h5 className="fw-bold text-primary mb-3">
-              <i className="fas fa-history me-2"></i>
-              Seçili Kurum(lar) Tahta Transfer Geçmişi
-            </h5>
-            {loadingTransfers ? (
-              <div className="text-center py-4"><Spinner animation="border" /></div>
+        {/* Transfer Onay & Gönderim Butonu */}
+        <div className="d-flex align-items-center justify-content-end gap-3 mt-4 pt-2 mb-5">
+          <Link href="/tahtalar/liste" className="btn btn-light rounded-pill px-4 border">
+            İptal
+          </Link>
+          <Button
+            type="submit"
+            variant="success"
+            disabled={loading || selectedBoardIds.length === 0 || !sourceId || !targetId}
+            className="rounded-pill px-5 shadow-sm fw-semibold d-inline-flex align-items-center gap-2"
+            style={{ height: 48 }}
+          >
+            {loading ? (
+              <>
+                <Spinner size="sm" animation="border" />
+                <span>Transfer Ediliyor...</span>
+              </>
             ) : (
-              <Table hover responsive className="align-middle mb-0">
-                <thead className="bg-light">
-                  <tr>
-                    <th>Tarih</th>
-                    <th>Tahta Tipi</th>
-                    <th>Adet</th>
-                    <th>Gönderen Kurum</th>
-                    <th>Alan Kurum</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {transfers.map(tr => (
-                    <tr key={tr.id}>
-                      <td>{tr.date}</td>
-                      <td>{getBoardTypeLabel(tr.board_type)}</td>
-                      <td>{tr.count}</td>
-                      <td>{getInstitutionName(tr.from_institution_id)}</td>
-                      <td>{getInstitutionName(tr.to_institution_id)}</td>
-                    </tr>
-                  ))}
-                  {transfers.length === 0 && (
-                    <tr><td colSpan={5} className="text-center text-muted">Transfer geçmişi bulunamadı.</td></tr>
-                  )}
-                </tbody>
-              </Table>
+              <>
+                <i className="fas fa-arrows-split-up-and-left"></i>
+                <span>{selectedBoardIds.length > 0 ? `${selectedBoardIds.length} Adet Tahtayı Transfer Et` : 'Transferi Tamamla'}</span>
+              </>
             )}
-          </Card.Body>
-        </Card>
+          </Button>
+        </div>
+      </Form>
+
+      {/* ─── 4. BÖLÜM: TRANSFER GEÇMİŞİ TABLOSU ─── */}
+      {(sourceId || targetId) && (
+        <div className="form-section-card mb-5">
+          <div className="form-section-header">
+            <div className="d-flex align-items-center gap-2">
+              <span className="section-icon-badge bg-primary-soft">
+                <i className="fas fa-clock-rotate-left text-primary"></i>
+              </span>
+              <div>
+                <div className="section-title">Seçili Kurum(lar)ın Tahta Transfer Geçmişi</div>
+                <div className="text-muted small">Seçilen okullara ait geçmiş transfer kayıtları</div>
+              </div>
+            </div>
+            <span className="badge-pill badge-pill-info">{transfers.length} Kayıt</span>
+          </div>
+          <div className="p-0">
+            {loadingTransfers ? (
+              <div className="text-center py-5">
+                <Spinner animation="border" size="sm" className="me-2 text-primary" />
+                <span className="text-muted">Transfer geçmişi yükleniyor...</span>
+              </div>
+            ) : (
+              <div className="table-responsive">
+                <Table hover className="align-middle mb-0">
+                  <thead className="bg-light">
+                    <tr>
+                      <th>Transfer Tarihi</th>
+                      <th>Tahta Modeli</th>
+                      <th>Adet</th>
+                      <th>Gönderen Kurum (Kaynak)</th>
+                      <th>Alan Kurum (Hedef)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {transfers.map(tr => (
+                      <tr key={tr.id}>
+                        <td className="fw-semibold text-secondary">{tr.date}</td>
+                        <td>
+                          <span className="badge bg-light text-dark border font-monospace">
+                            {getBoardTypeLabel(tr.board_type)}
+                          </span>
+                        </td>
+                        <td>
+                          <span className="badge bg-primary-soft text-primary rounded-pill px-3 py-1">
+                            {tr.count} Adet
+                          </span>
+                        </td>
+                        <td>
+                          <span className="fw-semibold text-dark">{getInstitutionName(tr.from_institution_id)}</span>
+                        </td>
+                        <td>
+                          <span className="fw-semibold text-success">{getInstitutionName(tr.to_institution_id)}</span>
+                        </td>
+                      </tr>
+                    ))}
+                    {transfers.length === 0 && (
+                      <tr>
+                        <td colSpan={5} className="text-center text-muted py-4">
+                          Bu kurumlara ait geçmiş transfer kaydı bulunamadı.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </Table>
+              </div>
+            )}
+          </div>
+        </div>
       )}
     </Container>
   );
