@@ -140,7 +140,7 @@ export default function Reports() {
     }
 
     return (
-        <Container className="py-4">
+        <Container fluid className="px-0">
             <h2 className="mb-4 fw-bold text-primary"><i className="fas fa-chart-pie me-2"></i>Genel Raporlar</h2>
 
             {/* Summary Cards */}

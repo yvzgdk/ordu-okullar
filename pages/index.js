@@ -224,429 +224,320 @@ export default function Home() {
 
   // ──────────── 6) Render (JSX) ────────────
   return (
-    <Container className="py-4">
-      <Card className="mb-4 shadow-lg border-0 bg-gradient" style={{ background: 'linear-gradient(90deg, #e3f0ff 0%, #f6faff 100%)', borderRadius: '1.5rem' }}>
-        <Card.Body className="d-flex align-items-center gap-3 flex-wrap flex-md-nowrap">
-          <div className="d-flex align-items-center justify-content-center rounded-circle bg-primary bg-gradient me-3" style={{ width: 56, height: 56, minWidth: 56 }}>
-            <i className="fas fa-map-marked-alt fa-2x text-white"></i>
+    <Container fluid className="px-0">
+      {/* ─── Hero / Bilgi ve Filtre Başlığı ─── */}
+      <Card className="mb-4 border-0 shadow-sm" style={{ background: 'linear-gradient(135deg, #1e293b, #0f172a)', borderRadius: '1.25rem', color: '#fff' }}>
+        <Card.Body className="p-4 d-flex align-items-center justify-content-between flex-wrap gap-3">
+          <div className="d-flex align-items-center gap-3">
+            <div className="rounded-3 d-flex align-items-center justify-content-center" style={{ width: 52, height: 52, background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', fontSize: '1.4rem' }}>
+              <i className="fas fa-layer-group"></i>
+            </div>
+            <div>
+              <h4 className="fw-bold mb-1 text-white">Ordu Fatih Projesi Genel Durum Paneli</h4>
+              <p className="text-white-50 mb-0 small">İl geneli okullar, akıllı tahtalar ve ağ altyapı istatistikleri</p>
+            </div>
           </div>
-          <div className="flex-grow-1">
-            <Form.Group controlId="selectDistrict" className="mb-0">
-              <Form.Label className="fw-bold fs-5 text-primary mb-2">İlçe Seçimi</Form.Label>
-              <Form.Select
-                value={selDistrict}
-                onChange={(e) => {
-                  const selectedValue = e.target.value;
-                  setSelDistrict(selectedValue);
-                  setFilterName('');
-                  setFilterInternet('Tümü');
-                  setFilterInfra('Tümü');
-                  if (selectedValue !== 'Tümü') {
-                    router.push(`/districts/${selectedValue}`);
-                  }
-                }}
-                className="form-select-lg"
-                style={{ fontSize: '1.15rem', minWidth: 220, maxWidth: 340, outline: 'none' }}
-                aria-label="İlçe Seçimi"
-              >
-                <option value="Tümü">Tüm İlçeler</option>
-                {districts.map((d) => (
-                  <option key={d.id} value={d.id}>{d.name}</option>
-                ))}
-              </Form.Select>
-            </Form.Group>
+          <div className="d-flex align-items-center gap-2">
+            <span className="small text-white-50 fw-semibold d-none d-sm-inline">İlçe Seçimi:</span>
+            <Form.Select
+              value={selDistrict}
+              onChange={(e) => {
+                const selectedValue = e.target.value;
+                setSelDistrict(selectedValue);
+                setFilterName('');
+                setFilterInternet('Tümü');
+                setFilterInfra('Tümü');
+              }}
+              className="form-select bg-dark text-white border-secondary rounded-pill px-3 py-2"
+              style={{ minWidth: 220, fontSize: '0.92rem' }}
+              aria-label="İlçe Seçimi"
+            >
+              <option value="Tümü">Tüm İlçeler (Ordu Geneli)</option>
+              {districts.map((d) => (
+                <option key={d.id} value={d.id}>{d.name}</option>
+              ))}
+            </Form.Select>
           </div>
         </Card.Body>
       </Card>
 
+      {/* ─── 1. KURUMLAR BÖLÜMÜ ─── */}
+      <div className="section-header-modern">
+        <div className="d-flex align-items-center gap-2">
+          <div className="section-icon-badge bg-primary-soft">
+            <i className="fas fa-school"></i>
+          </div>
+          <h5 className="section-title mb-0">Kurum & Okul İstatistikleri</h5>
+        </div>
+        <span className="text-muted small">{selDistrict === 'Tümü' ? 'Ordu Geneli' : districts.find(d => String(d.id) === String(selDistrict))?.name}</span>
+      </div>
+
+      <Row className="g-3 mb-4">
+        <Col xs={12} sm={6} lg={3}>
+          <div className="modern-kpi-card h-100">
+            <div className="kpi-top">
+              <span className="kpi-label">{selDistrict === 'Tümü' ? 'Toplam İlçe' : 'Seçili İlçe'}</span>
+              <div className="kpi-icon-box bg-primary-soft">
+                <i className="fas fa-map-marker-alt"></i>
+              </div>
+            </div>
+            <div className="kpi-value">{stats.totalDistricts}</div>
+            <div className="kpi-footer">
+              <i className="fas fa-check-circle text-success me-1"></i> Aktif İlçe
+            </div>
+          </div>
+        </Col>
+
+        <Col xs={12} sm={6} lg={3}>
+          <div className="modern-kpi-card h-100">
+            <div className="kpi-top">
+              <span className="kpi-label">Toplam Kurum</span>
+              <div className="kpi-icon-box bg-success-soft">
+                <i className="fas fa-building-columns"></i>
+              </div>
+            </div>
+            <div className="kpi-value">{stats.totalInstitutions}</div>
+            <div className="kpi-footer">
+              <i className="fas fa-school text-primary me-1"></i> Okul & Kurum Kayıtlı
+            </div>
+          </div>
+        </Col>
+
+        <Col xs={12} sm={6} lg={3}>
+          <div className="modern-kpi-card h-100">
+            <div className="kpi-top">
+              <span className="kpi-label">Ev Sahibi Kurum</span>
+              <div className="kpi-icon-box bg-info-soft">
+                <i className="fas fa-user-shield"></i>
+              </div>
+            </div>
+            <div className="kpi-value">{stats.hostInstitutions}</div>
+            <div className="kpi-footer">
+              <span className="badge bg-success-subtle text-success">Müstakil Bina</span>
+            </div>
+          </div>
+        </Col>
+
+        <Col xs={12} sm={6} lg={3}>
+          <div className="modern-kpi-card h-100">
+            <div className="kpi-top">
+              <span className="kpi-label">Misafir Kurum</span>
+              <div className="kpi-icon-box bg-warning-soft">
+                <i className="fas fa-house-chimney-user"></i>
+              </div>
+            </div>
+            <div className="kpi-value">{stats.guestInstitutions}</div>
+            <div className="kpi-footer">
+              <span className="badge bg-warning-subtle text-warning">Ortak Bina</span>
+            </div>
+          </div>
+        </Col>
+      </Row>
+
       {/* ─── Grafikler ─── */}
-      <Row className="g-4 mb-5">
-        <Col md={6}>
-          <Card className="h-100 shadow-sm border-0">
-            <Card.Body>
-              <h5 className="card-title text-center mb-3">Altyapı Dağılımı</h5>
+      <Row className="g-3 mb-4">
+        <Col lg={6}>
+          <Card className="h-100 shadow-sm border-0 rounded-4">
+            <Card.Body className="p-4">
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <h6 className="fw-bold text-dark mb-0"><i className="fas fa-network-wired text-primary me-2"></i>Altyapı Dağılımı</h6>
+                <span className="badge bg-light text-muted border">Yüzde Oranları</span>
+              </div>
               <BoardPhaseChart data={stats.infraCounts} type="doughnut" />
             </Card.Body>
           </Card>
         </Col>
-        <Col md={6}>
-          <Card className="h-100 shadow-sm border-0">
-            <Card.Body>
-              <h5 className="card-title text-center mb-3">ET Dağılımı</h5>
+        <Col lg={6}>
+          <Card className="h-100 shadow-sm border-0 rounded-4">
+            <Card.Body className="p-4">
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <h6 className="fw-bold text-dark mb-0"><i className="fas fa-tv text-info me-2"></i>Etkileşimli Tahta Dağılımı</h6>
+                <span className="badge bg-light text-muted border">Marka Sayıları</span>
+              </div>
               <BoardPhaseChart data={stats.brands} type="bar" />
             </Card.Body>
           </Card>
         </Col>
       </Row>
 
-      {/* ─── Bilgi Kartları ─── */}
-      <Row className="g-4 mb-5">
-        {/* KURUMLAR başlığı */}
-        <Col xs={12}>
-          <h5 style={{ color: 'red', fontWeight: 'bold', letterSpacing: 1, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <i className="fas fa-building"></i>
-            KURUMLAR
-          </h5>
-        </Col>
-        <Col xs={12} md={4} lg={3}>
-          <Card className="h-100 border-0 shadow-sm hover-card">
-            <Card.Body className="d-flex flex-column justify-content-center align-items-center text-center">
-              <div className="icon-circle bg-primary mb-3">
-                <i className="fas fa-map-marker-alt text-white"></i>
-              </div>
-              <Card.Title className="text-primary fw-bold">
-                {selDistrict === 'Tümü' ? 'Toplam İlçe' : 'Seçili İlçe'}
-              </Card.Title>
-              <Card.Text className="display-4 fw-bold text-dark">
-                {stats.totalDistricts}
-              </Card.Text>
-            </Card.Body>
-          </Card>
-        </Col>
-
-        <Col xs={12} md={4} lg={3}>
-          <Card className="h-100 border-0 shadow-sm hover-card">
-            <Card.Body className="d-flex flex-column justify-content-center align-items-center text-center">
-              <div className="icon-circle bg-success mb-3">
-                <i className="fas fa-school text-white"></i>
-              </div>
-              <Card.Title className="text-success fw-bold">Toplam Kurum</Card.Title>
-              <Card.Text className="display-4 fw-bold text-dark">
-                {stats.totalInstitutions}
-              </Card.Text>
-            </Card.Body>
-          </Card>
-        </Col>
-
-        <Col xs={12} md={4} lg={3}>
-          <Card className="h-100 border-0 shadow-sm hover-card">
-            <Card.Body className="d-flex flex-column justify-content-center align-items-center text-center">
-              <div className="icon-circle bg-info mb-3">
-                <i className="fas fa-user-shield text-white"></i>
-              </div>
-              <Card.Title className="text-info fw-bold">Ev Sahibi Kurum</Card.Title>
-              <Card.Text className="display-4 fw-bold text-dark">
-                {stats.hostInstitutions}
-              </Card.Text>
-            </Card.Body>
-          </Card>
-        </Col>
-
-        <Col xs={12} md={4} lg={3}>
-          <Card className="h-100 border-0 shadow-sm hover-card">
-            <Card.Body className="d-flex flex-column justify-content-center align-items-center text-center">
-              <div className="icon-circle bg-warning mb-3">
-                <i className="fas fa-user-friends text-white"></i>
-              </div>
-              <Card.Title className="text-warning fw-bold">Misafir Kurum</Card.Title>
-              <Card.Text className="display-4 fw-bold text-dark">
-                {stats.guestInstitutions}
-              </Card.Text>
-            </Card.Body>
-          </Card>
-        </Col>
-
-        <Col xs={12}>
-          <h5 style={{ color: 'red', fontWeight: 'bold', letterSpacing: 1, display: 'flex', alignItems: 'center', gap: 8 }}>
+      {/* ─── 2. TAHTA DURUMU BÖLÜMÜ ─── */}
+      <div className="section-header-modern">
+        <div className="d-flex align-items-center gap-2">
+          <div className="section-icon-badge bg-info-soft">
             <i className="fas fa-chalkboard"></i>
-            TAHTA DURUMU
-          </h5>
+          </div>
+          <h5 className="section-title mb-0">Etkileşimli Tahta (ET) Dağılımı</h5>
+        </div>
+        <span className="text-muted small">Marka ve Model Sayıları</span>
+      </div>
+
+      <Row className="g-3 mb-4">
+        <Col xs={12} sm={6} lg={3}>
+          <div className="modern-kpi-card h-100">
+            <div className="kpi-top">
+              <span className="kpi-label">Toplam Tahta</span>
+              <div className="kpi-icon-box bg-info-soft">
+                <i className="fas fa-chalkboard"></i>
+              </div>
+            </div>
+            <div className="kpi-value">{stats.totalBoards}</div>
+            <div className="kpi-footer">
+              <i className="fas fa-tv text-info me-1"></i> Tüm Markalar
+            </div>
+          </div>
         </Col>
 
-        <Col xs={12} md={4} lg={3}>
-          <Card className="h-100 border-0 shadow-sm hover-card">
-            <Card.Body className="d-flex flex-column justify-content-center align-items-center text-center">
-              <div className="icon-circle bg-info mb-3">
-                <i className="fas fa-chalkboard text-white"></i>
+        <Col xs={12} sm={6} lg={3}>
+          <div className="modern-kpi-card h-100">
+            <div className="kpi-top">
+              <span className="kpi-label">Vestel Siyah</span>
+              <div className="kpi-icon-box bg-dark-soft">
+                <i className="fas fa-tv"></i>
               </div>
-              <Card.Title className="text-info fw-bold">Toplam Tahta</Card.Title>
-              <Card.Text className="display-4 fw-bold text-dark">
-                {stats.totalBoards}
-              </Card.Text>
-            </Card.Body>
-          </Card>
+            </div>
+            <div className="kpi-value">{stats.brands['Vestel Siyah']}</div>
+            <div className="kpi-footer text-muted">Faz 1 & Faz 2</div>
+          </div>
         </Col>
 
-        <Col xs={12} md={4} lg={3}>
-          <Card className="h-100 border-0 shadow-sm hover-card">
-            <Card.Body className="d-flex flex-column justify-content-center align-items-center text-center">
-              <div className="icon-circle bg-dark mb-3">
-                <i className="fas fa-tv text-white"></i>
+        <Col xs={12} sm={6} lg={3}>
+          <div className="modern-kpi-card h-100">
+            <div className="kpi-top">
+              <span className="kpi-label">Vestel Gri</span>
+              <div className="kpi-icon-box bg-dark-soft">
+                <i className="fas fa-tv"></i>
               </div>
-              <Card.Title className="text-dark fw-bold">Vestel Siyah</Card.Title>
-              <Card.Text className="display-4 fw-bold text-dark">
-                {stats.brands['Vestel Siyah']}
-              </Card.Text>
-            </Card.Body>
-          </Card>
+            </div>
+            <div className="kpi-value">{stats.brands['Vestel Gri']}</div>
+            <div className="kpi-footer text-muted">Faz 2 Gri Kasa</div>
+          </div>
         </Col>
 
-        <Col xs={12} md={4} lg={3}>
-          <Card className="h-100 border-0 shadow-sm hover-card">
-            <Card.Body className="d-flex flex-column justify-content-center align-items-center text-center">
-              <div className="icon-circle bg-secondary mb-3">
-                <i className="fas fa-tv text-white"></i>
+        <Col xs={12} sm={6} lg={3}>
+          <div className="modern-kpi-card h-100">
+            <div className="kpi-top">
+              <span className="kpi-label">Arçelik</span>
+              <div className="kpi-icon-box bg-danger-soft">
+                <i className="fas fa-tv"></i>
               </div>
-              <Card.Title className="text-secondary fw-bold">Vestel Gri</Card.Title>
-              <Card.Text className="display-4 fw-bold text-dark">
-                {stats.brands['Vestel Gri']}
-              </Card.Text>
-            </Card.Body>
-          </Card>
-        </Col>
-
-        <Col xs={12} md={4} lg={3}>
-          <Card className="h-100 border-0 shadow-sm hover-card">
-            <Card.Body className="d-flex flex-column justify-content-center align-items-center text-center">
-              <div className="icon-circle bg-danger mb-3">
-                <i className="fas fa-tv text-white"></i>
-              </div>
-              <Card.Title className="text-danger fw-bold">Arçelik</Card.Title>
-              <Card.Text className="display-4 fw-bold text-dark">
-                {stats.brands['Arçelik']}
-              </Card.Text>
-            </Card.Body>
-          </Card>
-        </Col>
-
-        <Col xs={12} md={4} lg={3}>
-          <Card className="h-100 border-0 shadow-sm hover-card">
-            <Card.Body className="d-flex flex-column justify-content-center align-items-center text-center">
-              <div className="icon-circle bg-warning mb-3">
-                <i className="fas fa-tv text-white"></i>
-              </div>
-              <Card.Title className="text-warning fw-bold">Aidata</Card.Title>
-              <Card.Text className="display-4 fw-bold text-dark">
-                {stats.brands['Aidata']}
-              </Card.Text>
-            </Card.Body>
-          </Card>
+            </div>
+            <div className="kpi-value">{stats.brands['Arçelik']}</div>
+            <div className="kpi-footer text-danger">Faz 3 Arçelik</div>
+          </div>
         </Col>
       </Row>
-      {/* ALTYAPI DURUMU başlığı */}
-      <Row>
-        <Col xs={12}>
-          <h5 style={{ color: 'red', fontWeight: 'bold', letterSpacing: 1, display: 'flex', alignItems: 'center', gap: 8 }}>
+
+      {/* ─── 3. ALTYAPI DURUMU ─── */}
+      <div className="section-header-modern">
+        <div className="d-flex align-items-center gap-2">
+          <div className="section-icon-badge bg-success-soft">
             <i className="fas fa-network-wired"></i>
-            ALTYAPI DURUMU
-          </h5>
+          </div>
+          <h5 className="section-title mb-0">Ağ & Altyapı Fazları</h5>
+        </div>
+        <span className="text-muted small">Fatih Projesi Kapsamı</span>
+      </div>
+
+      <Row className="g-3 mb-4">
+        <Col xs={6} sm={4} lg={2}>
+          <div className="modern-kpi-card text-center p-3 h-100">
+            <div className="kpi-label mb-2">FAZ 1</div>
+            <div className="kpi-value fs-2 text-success mb-0">{stats.infraCounts['FAZ 1']}</div>
+            <div className="small text-muted mt-2">Okul</div>
+          </div>
+        </Col>
+        <Col xs={6} sm={4} lg={2}>
+          <div className="modern-kpi-card text-center p-3 h-100">
+            <div className="kpi-label mb-2">FAZ 2</div>
+            <div className="kpi-value fs-2 text-primary mb-0">{stats.infraCounts['FAZ 2']}</div>
+            <div className="small text-muted mt-2">Okul</div>
+          </div>
+        </Col>
+        <Col xs={6} sm={4} lg={2}>
+          <div className="modern-kpi-card text-center p-3 h-100">
+            <div className="kpi-label mb-2">FAZ 3</div>
+            <div className="kpi-value fs-2 text-info mb-0">{stats.infraCounts['FAZ 3']}</div>
+            <div className="small text-muted mt-2">Okul</div>
+          </div>
+        </Col>
+        <Col xs={6} sm={4} lg={2}>
+          <div className="modern-kpi-card text-center p-3 h-100">
+            <div className="kpi-label mb-2">FAZ 1250</div>
+            <div className="kpi-value fs-2 text-warning mb-0">{stats.infraCounts['FAZ 1250']}</div>
+            <div className="small text-muted mt-2">Okul</div>
+          </div>
+        </Col>
+        <Col xs={6} sm={4} lg={2}>
+          <div className="modern-kpi-card text-center p-3 h-100">
+            <div className="kpi-label mb-2" style={{ color: '#8e24aa' }}>FAZ 4</div>
+            <div className="kpi-value fs-2 mb-0" style={{ color: '#8e24aa' }}>{stats.infraCounts['FAZ 4'] ?? 0}</div>
+            <div className="small text-muted mt-2">Okul</div>
+          </div>
+        </Col>
+        <Col xs={6} sm={4} lg={2}>
+          <div className="modern-kpi-card text-center p-3 h-100">
+            <div className="kpi-label mb-2 text-danger">YOK</div>
+            <div className="kpi-value fs-2 text-danger mb-0">{stats.infraCounts['YOK'] ?? 0}</div>
+            <div className="small text-muted mt-2">Okul</div>
+          </div>
         </Col>
       </Row>
-      {/* Faz 1 ve sonrası kartlar yeni satırda */}
-      <Row className="g-4 mb-5">
-        <Col xs={12} md={4} lg={3}>
-          <Card className="h-100 border-0 shadow-sm hover-card">
-            <Card.Body className="d-flex flex-column justify-content-center align-items-center text-center">
-              <div className="icon-circle bg-success mb-3">
-                <i className="fas fa-network-wired text-white"></i>
-              </div>
-              <Card.Title className="text-success fw-bold">FAZ 1</Card.Title>
-              <Card.Text className="display-4 fw-bold text-dark">
-                {stats.infraCounts['FAZ 1']}
-              </Card.Text>
-            </Card.Body>
-          </Card>
-        </Col>
 
-        <Col xs={12} md={4} lg={3}>
-          <Card className="h-100 border-0 shadow-sm hover-card">
-            <Card.Body className="d-flex flex-column justify-content-center align-items-center text-center">
-              <div className="icon-circle bg-primary mb-3">
-                <i className="fas fa-network-wired text-white"></i>
-              </div>
-              <Card.Title className="text-primary fw-bold">FAZ 2</Card.Title>
-              <Card.Text className="display-4 fw-bold text-dark">
-                {stats.infraCounts['FAZ 2']}
-              </Card.Text>
-            </Card.Body>
-          </Card>
-        </Col>
-
-        <Col xs={12} md={4} lg={3}>
-          <Card className="h-100 border-0 shadow-sm hover-card">
-            <Card.Body className="d-flex flex-column justify-content-center align-items-center text-center">
-              <div className="icon-circle bg-info mb-3">
-                <i className="fas fa-network-wired text-white"></i>
-              </div>
-              <Card.Title className="text-info fw-bold">FAZ 3</Card.Title>
-              <Card.Text className="display-4 fw-bold text-dark">
-                {stats.infraCounts['FAZ 3']}
-              </Card.Text>
-            </Card.Body>
-          </Card>
-        </Col>
-
-        <Col xs={12} md={4} lg={3}>
-          <Card className="h-100 border-0 shadow-sm hover-card">
-            <Card.Body className="d-flex flex-column justify-content-center align-items-center text-center">
-              <div className="icon-circle bg-warning mb-3">
-                <i className="fas fa-network-wired text-white"></i>
-              </div>
-              <Card.Title className="text-warning fw-bold">FAZ 1250</Card.Title>
-              <Card.Text className="display-4 fw-bold text-dark">
-                {stats.infraCounts['FAZ 1250']}
-              </Card.Text>
-            </Card.Body>
-          </Card>
-        </Col>
-
-        <Col xs={12} md={4} lg={3}>
-          <Card className="h-100 border-0 shadow-sm hover-card">
-            <Card.Body className="d-flex flex-column justify-content-center align-items-center text-center">
-              <div className="icon-circle mb-3" style={{ background: '#8e24aa' }}>
-                <i className="fas fa-bolt text-white"></i>
-              </div>
-              <Card.Title className="fw-bold" style={{ color: '#8e24aa' }}>FAZ 4</Card.Title>
-              <Card.Text className="display-4 fw-bold text-dark">
-                {stats.infraCounts['FAZ 4'] ?? 0}
-              </Card.Text>
-            </Card.Body>
-          </Card>
-        </Col>
-
-        <Col xs={12} md={4} lg={3}>
-          <Card className="h-100 border-0 shadow-sm hover-card">
-            <Card.Body className="d-flex flex-column justify-content-center align-items-center text-center">
-              <div className="icon-circle mb-3" style={{ background: '#ff9800' }}>
-                <i className="fas fa-tools text-white"></i>
-              </div>
-              <Card.Title className="fw-bold" style={{ color: '#ff9800' }}>SIVA ALTI</Card.Title>
-              <Card.Text className="display-4 fw-bold text-dark">
-                {stats.infraCounts['SIVA ALTI']}
-              </Card.Text>
-            </Card.Body>
-          </Card>
-        </Col>
-
-        <Col xs={12} md={4} lg={3}>
-          <Card className="h-100 border-0 shadow-sm hover-card">
-            <Card.Body className="d-flex flex-column justify-content-center align-items-center text-center">
-              <div className="icon-circle mb-3" style={{ background: '#4caf50' }}>
-                <i className="fas fa-hammer text-white"></i>
-              </div>
-              <Card.Title className="fw-bold" style={{ color: '#4caf50' }}>KENDİ</Card.Title>
-              <Card.Text className="display-4 fw-bold text-dark">
-                {stats.infraCounts['KENDİ']}
-              </Card.Text>
-            </Card.Body>
-          </Card>
-        </Col>
-
-        <Col xs={12} md={4} lg={3}>
-          <Card className="h-100 border-0 shadow-sm hover-card">
-            <Card.Body className="d-flex flex-column justify-content-center align-items-center text-center">
-              <div className="icon-circle mb-3" style={{ background: '#e53935' }}>
-                <i className="fas fa-times-circle text-white"></i>
-              </div>
-              <Card.Title className="fw-bold" style={{ color: '#e53935' }}>YOK</Card.Title>
-              <Card.Text className="display-4 fw-bold text-dark">
-                {stats.infraCounts['YOK']}
-              </Card.Text>
-            </Card.Body>
-          </Card>
-        </Col>
-
-        {/* Ev Sahibi Kurum Altyapısı */}
-        <Col xs={12} md={4} lg={3}>
-          <Card className="h-100 border-0 shadow-sm hover-card">
-            <Card.Body className="d-flex flex-column justify-content-center align-items-center text-center">
-              <div className="icon-circle mb-3" style={{ background: '#43a047' }}>
-                <i className="fas fa-home text-white"></i>
-              </div>
-              <Card.Title className="fw-bold" style={{ color: '#43a047' }}>Ev Sahibi Kurum Altyapısı Kullanan Misafir Kurum</Card.Title>
-              <Card.Text className="display-4 fw-bold text-dark">
-                {stats.hostInfraCount}
-              </Card.Text>
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col xs={12} md={4} lg={3}>
-          <Card className="h-100 border-0 shadow-sm hover-card">
-            <Card.Body className="d-flex flex-column justify-content-center align-items-center text-center">
-              <div className="icon-circle mb-3" style={{ background: '#1976d2' }}>
-                <i className="fas fa-random text-white"></i>
-              </div>
-              <Card.Title className="fw-bold" style={{ color: '#1976d2' }}>Misafir Kurum Altyapısını Kullanan Ev Sahibi Kurum</Card.Title>
-              <Card.Text className="display-4 fw-bold text-dark">
-                {guestInfraCount !== null ? guestInfraCount : stats.guestInfraCount}
-              </Card.Text>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
-      {/* İNTERNET DURUMU başlığı */}
-      <Row>
-        <Col xs={12}>
-          <h5 style={{ color: 'red', fontWeight: 'bold', letterSpacing: 1, display: 'flex', alignItems: 'center', gap: 8 }}>
+      {/* ─── 4. İNTERNET DURUMU ─── */}
+      <div className="section-header-modern">
+        <div className="d-flex align-items-center gap-2">
+          <div className="section-icon-badge bg-warning-soft">
             <i className="fas fa-globe"></i>
-            İNTERNET DURUMU
-          </h5>
+          </div>
+          <h5 className="section-title mb-0">İnternet Bağlantı Türleri</h5>
+        </div>
+        <span className="text-muted small">VPN & Genişbant Dağılımı</span>
+      </div>
+
+      <Row className="g-3 mb-4">
+        <Col xs={12} sm={4}>
+          <div className="modern-kpi-card h-100">
+            <div className="kpi-top">
+              <span className="kpi-label">Fatih VPN (Fiber)</span>
+              <div className="kpi-icon-box bg-primary-soft">
+                <i className="fas fa-globe"></i>
+              </div>
+            </div>
+            <div className="kpi-value text-primary">{stats.internetCounts.fiber}</div>
+            <div className="kpi-footer text-muted">
+              <span className="badge bg-primary-subtle text-primary">Fiber Altyapı</span>
+            </div>
+          </div>
+        </Col>
+        <Col xs={12} sm={4}>
+          <div className="modern-kpi-card h-100">
+            <div className="kpi-top">
+              <span className="kpi-label">MEB ADSL / VDSL</span>
+              <div className="kpi-icon-box bg-success-soft">
+                <i className="fas fa-broadcast-tower"></i>
+              </div>
+            </div>
+            <div className="kpi-value text-success">{stats.internetCounts.adsl}</div>
+            <div className="kpi-footer text-muted">
+              <span className="badge bg-success-subtle text-success">Bakır Hat</span>
+            </div>
+          </div>
+        </Col>
+        <Col xs={12} sm={4}>
+          <div className="modern-kpi-card h-100">
+            <div className="kpi-top">
+              <span className="kpi-label">GSM / LTE</span>
+              <div className="kpi-icon-box bg-info-soft">
+                <i className="fas fa-mobile-alt"></i>
+              </div>
+            </div>
+            <div className="kpi-value text-info">{stats.internetCounts.gsm}</div>
+            <div className="kpi-footer text-muted">
+              <span className="badge bg-info-subtle text-info">Mobil Şebeke</span>
+            </div>
+          </div>
         </Col>
       </Row>
-      {/* Fiber bağlantı ve sonrası kartlar yeni satırda */}
-      <Row className="g-4 mb-5">
-        <Col xs={12} md={4} lg={3}>
-          <Card className="h-100 border-0 shadow-sm hover-card">
-            <Card.Body className="d-flex flex-column justify-content-center align-items-center text-center">
-              <div className="icon-circle bg-primary mb-3">
-                <i className="fas fa-globe text-white"></i>
-              </div>
-              <Card.Title className="text-primary fw-bold">Fatih VPN</Card.Title>
-              <Card.Text className="display-4 fw-bold text-dark">
-                {stats.internetCounts.fiber}
-              </Card.Text>
-            </Card.Body>
-          </Card>
-        </Col>
-
-        <Col xs={12} md={4} lg={3}>
-          <Card className="h-100 border-0 shadow-sm hover-card">
-            <Card.Body className="d-flex flex-column justify-content-center align-items-center text-center">
-              <div className="icon-circle bg-warning mb-3">
-                <i className="fas fa-broadcast-tower text-white"></i>
-              </div>
-              <Card.Title className="text-success fw-bold">MEB ADSL</Card.Title>
-              <Card.Text className="display-4 fw-bold text-dark">
-                {stats.internetCounts.adsl}
-              </Card.Text>
-            </Card.Body>
-          </Card>
-        </Col>
-
-        <Col xs={12} md={4} lg={3}>
-          <Card className="h-100 border-0 shadow-sm hover-card">
-            <Card.Body className="d-flex flex-column justify-content-center align-items-center text-center">
-              <div className="icon-circle bg-info mb-3">
-                <i className="fas fa-mobile-alt text-white"></i>
-              </div>
-              <Card.Title className="text-info fw-bold">GSM Bağlantı</Card.Title>
-              <Card.Text className="display-4 fw-bold text-dark">
-                {stats.internetCounts.gsm}
-              </Card.Text>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
-
-      <style jsx>{`
-        .hover-card {
-          transition: transform 0.2s ease-in-out;
-        }
-        .hover-card:hover {
-          transform: translateY(-5px);
-        }
-        .icon-circle {
-          width: 60px;
-          height: 60px;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-        .icon-circle i {
-          font-size: 24px;
-        }
-      `}</style>
     </Container>
   );
 }

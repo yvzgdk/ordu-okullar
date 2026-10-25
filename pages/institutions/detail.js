@@ -37,12 +37,20 @@ export default function InstitutionDetailPage() {
   }, [institutions, filterDistrict, filterCode, filterName, filterStatus]);
 
   return (
-    <Container className="py-4">
-      <div className="d-flex align-items-center gap-3 mb-4">
-        <span className="rounded-circle bg-primary bg-gradient d-flex align-items-center justify-content-center shadow" style={{ width: 54, height: 54 }}>
-          <i className="fas fa-list-alt fa-2x text-white"></i>
-        </span>
-        <h2 className="fw-bold mb-0" style={{ color: '#1a237e', letterSpacing: '0.5px' }}>Kurum Detay Sayfası</h2>
+    <Container fluid className="px-0">
+      <div className="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+        <div className="d-flex align-items-center gap-3">
+          <span className="rounded-3 bg-primary-soft d-flex align-items-center justify-content-center shadow-sm" style={{ width: 48, height: 48, fontSize: '1.25rem' }}>
+            <i className="fas fa-school text-primary"></i>
+          </span>
+          <div>
+            <h4 className="fw-bold mb-0 text-dark">Kurum & Okul Detay Listesi</h4>
+            <span className="text-muted small">Ordu il genelindeki kayıtlı tüm kurumlar</span>
+          </div>
+        </div>
+        <div className="badge bg-primary px-3 py-2 rounded-pill fs-6">
+          Toplam: {institutions.length} Kurum
+        </div>
       </div>
       <Card className="mb-4 shadow-sm">
         <Card.Body>
@@ -143,43 +151,45 @@ export default function InstitutionDetailPage() {
           {loadingInst ? (
             <div className="text-center py-4"><Spinner animation="border" /></div>
           ) : (
-            (filterDistrict || filterCode || filterName || filterStatus) ? (
-              <Table hover responsive className="align-middle mb-0">
-                <thead className="bg-light">
-                  <tr>
-                    <th>İlçe</th>
-                    <th>Kurum Kodu</th>
-                    <th>Kurum Adı</th>
-                    <th>Kurum Durumu</th>
-                    <th></th>
+            <Table hover responsive className="align-middle mb-0">
+              <thead className="bg-light">
+                <tr>
+                  <th>İlçe</th>
+                  <th>Kurum Kodu</th>
+                  <th>Kurum Adı</th>
+                  <th>Kurum Durumu</th>
+                  <th className="text-end">İşlem</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredInstitutions.map(inst => (
+                  <tr key={inst.id}>
+                    <td><span className="badge bg-light text-dark border">{districts.find(d => d.id === inst.district_id)?.name || '-'}</span></td>
+                    <td className="fw-semibold text-secondary">{inst.code}</td>
+                    <td className="fw-bold text-dark">{inst.name}</td>
+                    <td>
+                      <span className={`badge ${inst.status === 'ev_sahibi' ? 'bg-success-soft text-success border border-success-subtle' : 'bg-warning-soft text-warning border border-warning-subtle'} rounded-pill px-3 py-1`}>
+                        {inst.status === 'ev_sahibi' ? 'Ev Sahibi' : inst.status === 'misafir' ? 'Misafir' : '-'}
+                      </span>
+                    </td>
+                    <td className="text-end">
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        className="rounded-pill px-3 shadow-sm d-inline-flex align-items-center gap-1"
+                        onClick={() => router.push(`/institutions/${inst.id}`)}
+                      >
+                        <i className="fas fa-eye small"></i>
+                        <span>Detay</span>
+                      </Button>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {filteredInstitutions.map(inst => (
-                    <tr key={inst.id}>
-                      <td>{districts.find(d => d.id === inst.district_id)?.name || '-'}</td>
-                      <td>{inst.code}</td>
-                      <td>{inst.name}</td>
-                      <td>{inst.status === 'ev_sahibi' ? 'Ev Sahibi' : inst.status === 'misafir' ? 'Misafir' : '-'}</td>
-                      <td>
-                        <Button
-                          variant="outline-primary"
-                          size="sm"
-                          onClick={() => router.push(`/institutions/${inst.id}`)}
-                        >
-                          Kurum Detayı
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
-                  {filteredInstitutions.length === 0 && (
-                     <tr><td colSpan={5} className="text-center text-muted">Kriterlere uygun kurum bulunamadı.</td></tr>
-                  )}
-                </tbody>
-              </Table>
-            ) : (
-              <div className="text-center text-muted py-4">Lütfen filtre seçin.</div>
-            )
+                ))}
+                {filteredInstitutions.length === 0 && (
+                   <tr><td colSpan={5} className="text-center text-muted py-4">Kriterlere uygun kurum bulunamadı.</td></tr>
+                )}
+              </tbody>
+            </Table>
           )}
         </Card.Body>
       </Card>
