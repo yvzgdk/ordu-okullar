@@ -8,39 +8,39 @@ const MENU_GROUPS = [
   {
     title: 'GENEL BAKIŞ',
     items: [
-      { href: '/', label: 'Anasayfa & İstatistik', icon: 'fas fa-chart-line' },
-      { href: '/reports', label: 'Grafiksel Raporlar', icon: 'fas fa-chart-pie' },
+      { href: '/', legacyHref: '/', label: 'Anasayfa & İstatistik', icon: 'fas fa-chart-line' },
+      { href: '/raporlar', legacyHref: '/reports', label: 'Grafiksel Raporlar', icon: 'fas fa-chart-pie' },
     ]
   },
   {
     title: 'KURUM İŞLEMLERİ',
     items: [
-      { href: '/institutions/detail', label: 'Kurum Detay Listesi', icon: 'fas fa-school' },
-      { href: '/institutions', label: 'Yeni Kurum Ekle', icon: 'fas fa-plus-circle' },
-      { href: '/institutions/guest-add', label: 'Misafir Kurum Ekle', icon: 'fas fa-house-chimney-user' },
-      { href: '/institutions/edit', label: 'Kurum Düzenle & Sil', icon: 'fas fa-sliders' },
-      { href: '/institutions/bulk-import', label: 'Excel Toplu İçe Aktar', icon: 'fas fa-file-excel', badge: 'Excel' },
+      { href: '/kurumlar', legacyHref: '/institutions/detail', label: 'Kurum Detay Listesi', icon: 'fas fa-school' },
+      { href: '/kurum-ekle', legacyHref: '/institutions', label: 'Yeni Kurum Ekle', icon: 'fas fa-plus-circle' },
+      { href: '/kurumlar/misafir-ekle', legacyHref: '/institutions/guest-add', label: 'Misafir Kurum Ekle', icon: 'fas fa-house-chimney-user' },
+      { href: '/kurumlar/duzenle', legacyHref: '/institutions/edit', label: 'Kurum Düzenle & Sil', icon: 'fas fa-sliders' },
+      { href: '/kurumlar/toplu-ice-aktar', legacyHref: '/institutions/bulk-import', label: 'Excel Toplu İçe Aktar', icon: 'fas fa-file-excel', badge: 'Excel' },
     ]
   },
   {
     title: 'ETKİLEŞİMLİ TAHTA (ET)',
     items: [
-      { href: '/boards/add', label: 'Kat/Sınıf Tahta Ekle', icon: 'fas fa-chalkboard' },
-      { href: '/boards/details', label: 'Kurum Tahta Listesi', icon: 'fas fa-list-check' },
-      { href: '/boards/transfer', label: 'Okullar Arası Transfer', icon: 'fas fa-arrows-split-up-and-left', badge: 'Yeni' },
+      { href: '/tahtalar/ekle', legacyHref: '/boards/add', label: 'Kat/Sınıf Tahta Ekle', icon: 'fas fa-chalkboard' },
+      { href: '/tahtalar/liste', legacyHref: '/boards/details', label: 'Kurum Tahta Listesi', icon: 'fas fa-list-check' },
+      { href: '/tahtalar/transfer', legacyHref: '/boards/transfer', label: 'Okullar Arası Transfer', icon: 'fas fa-arrows-split-up-and-left', badge: 'Yeni' },
     ]
   },
   {
     title: 'BTR ÖĞRETMENLERİ',
     items: [
-      { href: '/btr/edit', label: 'BTR Öğretmen Listesi', icon: 'fas fa-user-graduate' },
-      { href: '/btr/add', label: 'Yeni BTR Görevlendir', icon: 'fas fa-user-plus' },
+      { href: '/btr-ogretmenleri', legacyHref: '/btr/edit', label: 'BTR Öğretmen Listesi', icon: 'fas fa-user-graduate' },
+      { href: '/btr-ekle', legacyHref: '/btr/add', label: 'Yeni BTR Görevlendir', icon: 'fas fa-user-plus' },
     ]
   },
   {
     title: 'SİSTEM & YÖNETİM',
     items: [
-      { href: '/districts', label: 'İlçe Yönetimi (19)', icon: 'fas fa-map-location-dot' },
+      { href: '/ilceler', legacyHref: '/districts', label: 'İlçe Yönetimi (19)', icon: 'fas fa-map-location-dot' },
     ]
   }
 ];
@@ -68,6 +68,15 @@ export default function SidebarLayout({ children }) {
   };
 
   const currentPath = router.pathname;
+  const currentAsPath = (router.asPath || '').split('?')[0];
+
+  // Aktif sayfa başlığını tespit et
+  const activeItem = MENU_GROUPS.flatMap(g => g.items).find(item => {
+    return currentAsPath === item.href ||
+           currentPath === item.legacyHref ||
+           (item.href !== '/' && currentAsPath.startsWith(item.href)) ||
+           (item.legacyHref !== '/' && currentPath.startsWith(item.legacyHref));
+  });
 
   return (
     <div className={`layout-wrapper ${collapsed ? 'layout-collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`}>
@@ -112,7 +121,10 @@ export default function SidebarLayout({ children }) {
             <div key={gIdx} className="menu-group">
               {!collapsed && <div className="menu-group-title">{group.title}</div>}
               {group.items.map((item, iIdx) => {
-                const isActive = currentPath === item.href || (item.href !== '/' && currentPath.startsWith(item.href));
+                const isActive = currentAsPath === item.href ||
+                                 currentPath === item.legacyHref ||
+                                 (item.href !== '/' && currentAsPath.startsWith(item.href)) ||
+                                 (item.legacyHref !== '/' && currentPath.startsWith(item.legacyHref));
                 return (
                   <Link 
                     key={iIdx} 
@@ -186,9 +198,15 @@ export default function SidebarLayout({ children }) {
 
             {/* Breadcrumb / Başlık Bilgisi */}
             <div className="topbar-breadcrumb d-none d-md-flex align-items-center gap-2">
-              <span className="breadcrumb-root">
+              <Link href="/" className="breadcrumb-root text-decoration-none">
                 <i className="fas fa-home me-1"></i> Ordu OFP
-              </span>
+              </Link>
+              {activeItem && activeItem.href !== '/' && (
+                <>
+                  <i className="fas fa-chevron-right text-muted" style={{ fontSize: '0.7rem' }}></i>
+                  <span className="breadcrumb-current text-dark fw-semibold">{activeItem.label}</span>
+                </>
+              )}
             </div>
           </div>
 
@@ -202,10 +220,10 @@ export default function SidebarLayout({ children }) {
               </Dropdown.Toggle>
               <Dropdown.Menu className="shadow-lg border-0 rounded-3 mt-2">
                 <Dropdown.Header className="small text-muted text-uppercase fw-bold">Oturum</Dropdown.Header>
-                <Dropdown.Item as={Link} href="/profile">
+                <Dropdown.Item as={Link} href="/profil">
                   <i className="fas fa-id-badge me-2 text-primary"></i> Profil Bilgileri
                 </Dropdown.Item>
-                <Dropdown.Item as={Link} href="/districts">
+                <Dropdown.Item as={Link} href="/ilceler">
                   <i className="fas fa-map-location-dot me-2 text-info"></i> İlçeler
                 </Dropdown.Item>
                 <Dropdown.Divider />

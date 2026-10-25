@@ -28,11 +28,15 @@ export default function InstitutionsPage() {
           </div>
         </div>
         <div className="d-flex align-items-center gap-2">
-          <Link href="/institutions/detail" className="btn btn-outline-secondary btn-sm rounded-pill px-3 d-inline-flex align-items-center gap-2">
+          <Link href="/kurumlar" className="btn btn-outline-secondary btn-sm rounded-pill px-3 d-inline-flex align-items-center gap-2">
             <i className="fas fa-list"></i>
             <span>Kurum Listesi</span>
           </Link>
-          <Link href="/institutions/bulk-import" className="btn btn-success-soft btn-sm rounded-pill px-3 d-inline-flex align-items-center gap-2">
+          <Link href="/kurumlar/misafir-ekle" className="btn btn-warning-soft btn-sm rounded-pill px-3 d-inline-flex align-items-center gap-2">
+            <i className="fas fa-house-chimney-user"></i>
+            <span>Misafir Kurum Ekle</span>
+          </Link>
+          <Link href="/kurumlar/toplu-ice-aktar" className="btn btn-success-soft btn-sm rounded-pill px-3 d-inline-flex align-items-center gap-2">
             <i className="fas fa-file-excel"></i>
             <span>Excel'den Yükle</span>
           </Link>

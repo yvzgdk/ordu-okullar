@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import useSWR from 'swr';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { supabase } from '../../lib/supabase';
 import { Container, Card, Row, Col, Form, Spinner, Button, Table, InputGroup } from 'react-bootstrap';
@@ -48,8 +49,18 @@ export default function InstitutionDetailPage() {
             <span className="text-muted small">Ordu il genelindeki kayıtlı tüm kurumlar</span>
           </div>
         </div>
-        <div className="badge bg-primary px-3 py-2 rounded-pill fs-6">
-          Toplam: {institutions.length} Kurum
+        <div className="d-flex align-items-center gap-2">
+          <Link href="/kurum-ekle" className="btn btn-primary btn-sm rounded-pill px-3 d-inline-flex align-items-center gap-2 shadow-sm">
+            <i className="fas fa-plus"></i>
+            <span>Yeni Kurum</span>
+          </Link>
+          <Link href="/kurumlar/misafir-ekle" className="btn btn-warning-soft btn-sm rounded-pill px-3 d-inline-flex align-items-center gap-2">
+            <i className="fas fa-house-chimney-user"></i>
+            <span>Misafir Ekle</span>
+          </Link>
+          <div className="badge bg-secondary-subtle text-dark px-3 py-2 rounded-pill fs-6 border">
+            Toplam: {institutions.length} Kurum
+          </div>
         </div>
       </div>
       <Card className="mb-4 shadow-sm">
@@ -177,7 +188,7 @@ export default function InstitutionDetailPage() {
                         variant="primary"
                         size="sm"
                         className="rounded-pill px-3 shadow-sm d-inline-flex align-items-center gap-1"
-                        onClick={() => router.push(`/institutions/${inst.id}`)}
+                        onClick={() => router.push(`/kurumlar/bilgi/${inst.id}`)}
                       >
                         <i className="fas fa-eye small"></i>
                         <span>Detay</span>
