@@ -1,7 +1,7 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { supabase } from '../../lib/supabase';
-import { Container, Card, Row, Col, Form, Button, Alert, Spinner, Table, ListGroup, Badge } from 'react-bootstrap';
+import { Container, Card, Row, Col, Form, Button, Alert, Spinner, Table, ListGroup, Badge, InputGroup } from 'react-bootstrap';
 
 const BOARD_TYPES = [
   { key: 'vestel_black_boards', label: 'Vestel Siyah' },
@@ -54,8 +54,14 @@ export default function BoardTransferPage() {
   const [transferDate, setTransferDate] = useState(getToday());
   const [officialLetterNo, setOfficialLetterNo] = useState('');
   
+  // ─── Tüm Geçmiş Transferler & Filtre State'leri ───
   const [transfers, setTransfers] = useState([]);
   const [loadingTransfers, setLoadingTransfers] = useState(false);
+  const [historySearch, setHistorySearch] = useState('');
+  const [historyDistrict, setHistoryDistrict] = useState('');
+  const [historyBoardType, setHistoryBoardType] = useState('');
+  const [historyStartDate, setHistoryStartDate] = useState('');
+  const [historyEndDate, setHistoryEndDate] = useState('');
 
   useEffect(() => {
     async function fetchInstitutions() {
@@ -100,41 +106,37 @@ export default function BoardTransferPage() {
     fetchSurplusBoards();
   }, [sourceId]);
 
-  // Transfer past
-  useEffect(() => {
-    async function fetchTransfers() {
-      if (!sourceId && !targetId) {
-        setTransfers([]);
-        return;
-      }
-      setLoadingTransfers(true);
-      let query = supabase
-        .from('board_transfers')
-        .select('*')
-        .order('date', { ascending: false });
-      if (sourceId && targetId) {
-        query = query.or(`from_institution_id.eq.${sourceId},to_institution_id.eq.${sourceId},from_institution_id.eq.${targetId},to_institution_id.eq.${targetId}`);
-      } else if (sourceId) {
-        query = query.or(`from_institution_id.eq.${sourceId},to_institution_id.eq.${sourceId}`);
-      } else if (targetId) {
-        query = query.or(`from_institution_id.eq.${targetId},to_institution_id.eq.${targetId}`);
-      }
-      const { data, error } = await query;
+  // Tüm Geçmiş Transferleri Çeken Fonksiyon
+  const fetchAllTransfers = useCallback(async () => {
+    setLoadingTransfers(true);
+    const { data, error } = await supabase
+      .from('board_transfers')
+      .select('id, date, board_type, count, from_institution_id, to_institution_id')
+      .order('date', { ascending: false })
+      .order('id', { ascending: false });
+    if (!error) {
       setTransfers(data || []);
-      setLoadingTransfers(false);
     }
-    fetchTransfers();
-  }, [sourceId, targetId]);
+    setLoadingTransfers(false);
+  }, []);
 
-  const getInstitutionName = (id) => {
-    const inst = institutions.find(i => String(i.id) === String(id));
+  useEffect(() => {
+    fetchAllTransfers();
+  }, [fetchAllTransfers]);
+
+  const getInstitutionObj = useCallback((id) => {
+    return institutions.find(i => String(i.id) === String(id));
+  }, [institutions]);
+
+  const getInstitutionName = useCallback((id) => {
+    const inst = getInstitutionObj(id);
     return inst ? `${inst.name}${inst.code ? ' (' + inst.code + ')' : ''}` : '-';
-  };
+  }, [getInstitutionObj]);
 
-  const getDistrictName = (districtId) => {
+  const getDistrictName = useCallback((districtId) => {
     const d = districts.find(item => String(item.id) === String(districtId));
     return d ? d.name : '-';
-  };
+  }, [districts]);
 
   const getBoardTypeLabel = (key) => {
     const t = BOARD_TYPES.find(t => t.key === key);
@@ -166,6 +168,53 @@ export default function BoardTransferPage() {
       return districtMatch && codeMatch && nameMatch;
     });
   }, [institutions, filterTargetDistrict, filterTargetCode, filterTargetName]);
+
+  // ─── Geçmiş Transferler Filtreleme Mantığı ───
+  const filteredTransfers = useMemo(() => {
+    return transfers.filter(tr => {
+      const fromInst = getInstitutionObj(tr.from_institution_id);
+      const toInst = getInstitutionObj(tr.to_institution_id);
+      
+      // Kelime Arama (Okul adı veya kodu)
+      if (historySearch.trim()) {
+        const q = historySearch.trim().toLowerCase();
+        const fromMatch = (fromInst?.name || '').toLowerCase().includes(q) || (fromInst?.code || '').toLowerCase().includes(q);
+        const toMatch = (toInst?.name || '').toLowerCase().includes(q) || (toInst?.code || '').toLowerCase().includes(q);
+        if (!fromMatch && !toMatch) return false;
+      }
+      
+      // İlçe Filtresi (Gönderen veya Alan Okul bu ilçede mi?)
+      if (historyDistrict) {
+        const fromDistMatch = String(fromInst?.district_id) === String(historyDistrict);
+        const toDistMatch = String(toInst?.district_id) === String(historyDistrict);
+        if (!fromDistMatch && !toDistMatch) return false;
+      }
+      
+      // Tahta Modeli / Tipi Filtresi
+      if (historyBoardType) {
+        if (tr.board_type !== historyBoardType) return false;
+      }
+      
+      // Tarih Aralığı
+      if (historyStartDate && tr.date < historyStartDate) return false;
+      if (historyEndDate && tr.date > historyEndDate) return false;
+      
+      return true;
+    });
+  }, [transfers, getInstitutionObj, historySearch, historyDistrict, historyBoardType, historyStartDate, historyEndDate]);
+
+  // Filtrelenen toplam tahta adedi
+  const totalTransferredCount = useMemo(() => {
+    return filteredTransfers.reduce((sum, tr) => sum + (parseInt(tr.count, 10) || 0), 0);
+  }, [filteredTransfers]);
+
+  const resetHistoryFilters = () => {
+    setHistorySearch('');
+    setHistoryDistrict('');
+    setHistoryBoardType('');
+    setHistoryStartDate('');
+    setHistoryEndDate('');
+  };
 
   const handleBoardToggle = (id) => {
      if (selectedBoardIds.includes(id)) {
@@ -298,7 +347,10 @@ export default function BoardTransferPage() {
     setLoading(false);
     setSuccessMsg('Tahta transfer işlemi başarıyla tamamlandı!');
     
-    // Refresh the surplus boards
+    // Geçmiş transfer listesini anında yenile
+    fetchAllTransfers();
+    
+    // Form alanlarını sıfırla
     setTargetId('');
     setFilterTargetDistrict('');
     setFilterTargetCode('');
@@ -350,8 +402,9 @@ export default function BoardTransferPage() {
         </Alert>
       )}
 
+      {/* ─── TRANSFER İŞLEM FORMU ─── */}
       <Form onSubmit={handleSubmit}>
-        <Row className="g-4">
+        <Row className="g-4 mb-5">
           {/* ─── 1. BÖLÜM: KAYNAK KURUM (TAHTANIN ALINACAĞI OKUL) ─── */}
           <Col lg={12}>
             <div className="form-section-card">
@@ -838,75 +891,249 @@ export default function BoardTransferPage() {
         </div>
       </Form>
 
-      {/* ─── 4. BÖLÜM: TRANSFER GEÇMİŞİ TABLOSU ─── */}
-      {(sourceId || targetId) && (
-        <div className="form-section-card mb-5">
-          <div className="form-section-header">
-            <div className="d-flex align-items-center gap-2">
-              <span className="section-icon-badge bg-primary-soft">
-                <i className="fas fa-clock-rotate-left text-primary"></i>
-              </span>
-              <div>
-                <div className="section-title">Seçili Kurum(lar)ın Tahta Transfer Geçmişi</div>
-                <div className="text-muted small">Seçilen okullara ait geçmiş transfer kayıtları</div>
-              </div>
+      {/* ─── 4. BÖLÜM: TÜM GEÇMİŞ TRANSFER HAREKETLERİ & GELİŞMİŞ FİLTRELEME ─── */}
+      <div className="form-section-card mb-5">
+        <div className="form-section-header flex-wrap gap-2">
+          <div className="d-flex align-items-center gap-2">
+            <span className="section-icon-badge bg-primary-soft">
+              <i className="fas fa-clock-rotate-left text-primary"></i>
+            </span>
+            <div>
+              <div className="section-title">Geçmiş Tahta Transfer Hareketleri & Kayıtları</div>
+              <div className="text-muted small">Ordu il genelinde okullar arasında gerçekleşen tüm tahta nakil işlemleri</div>
             </div>
-            <span className="badge-pill badge-pill-info">{transfers.length} Kayıt</span>
           </div>
-          <div className="p-0">
-            {loadingTransfers ? (
-              <div className="text-center py-5">
-                <Spinner animation="border" size="sm" className="me-2 text-primary" />
-                <span className="text-muted">Transfer geçmişi yükleniyor...</span>
-              </div>
-            ) : (
-              <div className="table-responsive">
-                <Table hover className="align-middle mb-0">
-                  <thead className="bg-light">
-                    <tr>
-                      <th>Transfer Tarihi</th>
-                      <th>Tahta Modeli</th>
-                      <th>Adet</th>
-                      <th>Gönderen Kurum (Kaynak)</th>
-                      <th>Alan Kurum (Hedef)</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {transfers.map(tr => (
+          <div className="d-flex align-items-center gap-2">
+            <span className="badge-pill badge-pill-info">
+              {filteredTransfers.length} / {transfers.length} İşlem
+            </span>
+            <span className="badge-pill badge-pill-success">
+              Toplam {totalTransferredCount} Tahta
+            </span>
+          </div>
+        </div>
+
+        {/* Filtreleme Çubuğu */}
+        <div className="p-3 bg-light border-bottom">
+          <Row className="g-2 align-items-center">
+            {/* 1. Kelime / Okul Arama */}
+            <Col xs={12} md={3}>
+              <InputGroup size="sm">
+                <InputGroup.Text className="bg-white border-end-0">
+                  <i className="fas fa-search text-muted"></i>
+                </InputGroup.Text>
+                <Form.Control
+                  type="text"
+                  placeholder="Okul adı veya kodu ara..."
+                  value={historySearch}
+                  onChange={e => setHistorySearch(e.target.value)}
+                  className="border-start-0"
+                />
+              </InputGroup>
+            </Col>
+
+            {/* 2. İlçe Filtresi */}
+            <Col xs={6} md={2}>
+              <Form.Select 
+                size="sm"
+                value={historyDistrict}
+                onChange={e => setHistoryDistrict(e.target.value)}
+              >
+                <option value="">Tüm İlçeler</option>
+                {districts.map(d => (
+                  <option key={d.id} value={d.id}>{d.name}</option>
+                ))}
+              </Form.Select>
+            </Col>
+
+            {/* 3. Tahta Modeli Filtresi */}
+            <Col xs={6} md={2}>
+              <Form.Select
+                size="sm"
+                value={historyBoardType}
+                onChange={e => setHistoryBoardType(e.target.value)}
+              >
+                <option value="">Tüm Tahta Tipleri</option>
+                {BOARD_TYPES.map(bt => (
+                  <option key={bt.key} value={bt.key}>{bt.label}</option>
+                ))}
+              </Form.Select>
+            </Col>
+
+            {/* 4. Başlangıç Tarihi */}
+            <Col xs={6} md={2}>
+              <Form.Control
+                size="sm"
+                type="date"
+                title="Başlangıç Tarihi"
+                value={historyStartDate}
+                onChange={e => setHistoryStartDate(e.target.value)}
+              />
+            </Col>
+
+            {/* 5. Bitiş Tarihi */}
+            <Col xs={6} md={2}>
+              <Form.Control
+                size="sm"
+                type="date"
+                title="Bitiş Tarihi"
+                value={historyEndDate}
+                onChange={e => setHistoryEndDate(e.target.value)}
+              />
+            </Col>
+
+            {/* 6. Temizle Butonu */}
+            <Col xs={12} md={1} className="d-flex justify-content-end">
+              {(historySearch || historyDistrict || historyBoardType || historyStartDate || historyEndDate) ? (
+                <Button 
+                  variant="outline-danger" 
+                  size="sm" 
+                  onClick={resetHistoryFilters}
+                  className="rounded-pill w-100"
+                  title="Filtreleri Sıfırla"
+                >
+                  <i className="fas fa-rotate-left me-1"></i>Sıfırla
+                </Button>
+              ) : (
+                <Button 
+                  variant="outline-secondary" 
+                  size="sm" 
+                  onClick={fetchAllTransfers}
+                  className="rounded-pill w-100"
+                  title="Yenile"
+                >
+                  <i className="fas fa-arrows-rotate"></i>
+                </Button>
+              )}
+            </Col>
+          </Row>
+        </div>
+
+        {/* Tablo Alanı */}
+        <div className="p-0">
+          {loadingTransfers ? (
+            <div className="text-center py-5">
+              <Spinner animation="border" size="sm" className="me-2 text-primary" />
+              <span className="text-muted">Transfer geçmişi yükleniyor...</span>
+            </div>
+          ) : (
+            <div className="table-responsive">
+              <Table hover className="align-middle mb-0">
+                <thead className="bg-light">
+                  <tr>
+                    <th style={{ minWidth: 120 }}>Tarih</th>
+                    <th style={{ minWidth: 140 }}>Tahta Modeli</th>
+                    <th style={{ minWidth: 90 }} className="text-center">Adet</th>
+                    <th style={{ minWidth: 260 }}>Gönderen Okul (Kaynak)</th>
+                    <th style={{ minWidth: 260 }}>Alan Okul (Hedef)</th>
+                    <th style={{ minWidth: 80 }} className="text-end">İşlem</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredTransfers.map(tr => {
+                    const fromInst = getInstitutionObj(tr.from_institution_id);
+                    const toInst = getInstitutionObj(tr.to_institution_id);
+                    return (
                       <tr key={tr.id}>
-                        <td className="fw-semibold text-secondary">{tr.date}</td>
+                        <td>
+                          <div className="d-flex align-items-center gap-2">
+                            <i className="fas fa-calendar-day text-muted small"></i>
+                            <span className="fw-semibold text-dark">{tr.date}</span>
+                          </div>
+                        </td>
                         <td>
                           <span className="badge bg-light text-dark border font-monospace">
                             {getBoardTypeLabel(tr.board_type)}
                           </span>
                         </td>
-                        <td>
-                          <span className="badge bg-primary-soft text-primary rounded-pill px-3 py-1">
+                        <td className="text-center">
+                          <span className="badge bg-primary-soft text-primary rounded-pill px-3 py-1 fw-bold fs-6">
                             {tr.count} Adet
                           </span>
                         </td>
                         <td>
-                          <span className="fw-semibold text-dark">{getInstitutionName(tr.from_institution_id)}</span>
+                          <div className="d-flex flex-column">
+                            <span className="fw-semibold text-dark">
+                              {fromInst ? fromInst.name : `Kurum ID: ${tr.from_institution_id}`}
+                            </span>
+                            <div className="d-flex align-items-center gap-2 mt-1">
+                              {fromInst && (
+                                <>
+                                  <span className="badge bg-light text-muted border small">
+                                    {getDistrictName(fromInst.district_id)}
+                                  </span>
+                                  {fromInst.code && (
+                                    <span className="text-muted small font-monospace">#{fromInst.code}</span>
+                                  )}
+                                </>
+                              )}
+                            </div>
+                          </div>
                         </td>
                         <td>
-                          <span className="fw-semibold text-success">{getInstitutionName(tr.to_institution_id)}</span>
+                          <div className="d-flex flex-column">
+                            <span className="fw-semibold text-success">
+                              {toInst ? toInst.name : `Kurum ID: ${tr.to_institution_id}`}
+                            </span>
+                            <div className="d-flex align-items-center gap-2 mt-1">
+                              {toInst && (
+                                <>
+                                  <span className="badge bg-light text-muted border small">
+                                    {getDistrictName(toInst.district_id)}
+                                  </span>
+                                  {toInst.code && (
+                                    <span className="text-muted small font-monospace">#{toInst.code}</span>
+                                  )}
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="text-end">
+                          {toInst && (
+                            <Link 
+                              href={`/kurumlar/bilgi/${toInst.id}`} 
+                              className="btn btn-outline-primary btn-sm rounded-pill px-2 py-1"
+                              title="Hedef Okul Detayını Gör"
+                            >
+                              <i className="fas fa-eye small"></i>
+                            </Link>
+                          )}
                         </td>
                       </tr>
-                    ))}
-                    {transfers.length === 0 && (
-                      <tr>
-                        <td colSpan={5} className="text-center text-muted py-4">
-                          Bu kurumlara ait geçmiş transfer kaydı bulunamadı.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </Table>
-              </div>
-            )}
-          </div>
+                    );
+                  })}
+                  {filteredTransfers.length === 0 && (
+                    <tr>
+                      <td colSpan={6} className="text-center text-muted py-5">
+                        <div className="d-flex flex-column align-items-center justify-content-center">
+                          <i className="fas fa-inbox fa-3x text-muted mb-3 opacity-50"></i>
+                          <h6 className="fw-bold mb-1">Kayıt Bulunamadı</h6>
+                          <p className="small text-muted mb-0">
+                            {(historySearch || historyDistrict || historyBoardType || historyStartDate || historyEndDate)
+                              ? 'Belirlediğiniz filtreleme kriterlerine uygun transfer işlemi bulunamadı.'
+                              : 'Sistemde henüz kayıtlı tahta transfer işlemi bulunmuyor.'}
+                          </p>
+                          {(historySearch || historyDistrict || historyBoardType || historyStartDate || historyEndDate) && (
+                            <Button 
+                              variant="outline-primary" 
+                              size="sm" 
+                              onClick={resetHistoryFilters} 
+                              className="mt-3 rounded-pill px-4"
+                            >
+                              Filtreleri Temizle
+                            </Button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </Table>
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </Container>
   );
 }
