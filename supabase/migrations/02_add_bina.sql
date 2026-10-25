@@ -1,0 +1,2 @@
+ALTER TABLE et_detay
+ADD COLUMN bina VARCHAR(50);

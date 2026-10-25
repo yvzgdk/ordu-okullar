@@ -1,0 +1,160 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --primary-color: #2563eb;
+  --primary-dark: #1e40af;
+  --secondary-color: #64748b;
+  --accent-color: #0ea5e9;
+  --background-bg: #f8fafc;
+  --surface-bg: #ffffff;
+  --text-main: #0f172a;
+  --text-secondary: #475569;
+  --nav-bg: rgba(255, 255, 255, 0.8);
+  --nav-border: rgba(226, 232, 240, 0.6);
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--background-bg);
+  color: var(--text-main);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Modern Navbar Styles */
+.navbar-modern {
+  background: var(--nav-bg) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--nav-border);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  padding: 0.75rem 0;
+  transition: all 0.3s ease;
+}
+
+.navbar-brand-modern {
+  font-weight: 700;
+  font-size: 1.25rem;
+  color: var(--primary-color) !important;
+  letter-spacing: -0.025em;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Target both direct nav-links and dropdown toggles */
+.navbar-modern .nav-link {
+  color: var(--text-secondary) !important;
+  font-weight: 500;
+  font-size: 0.95rem;
+  padding: 0.6rem 1rem !important;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 100%;
+  /* Ensure full height for alignment */
+}
+
+.navbar-modern .nav-link:hover,
+.navbar-modern .nav-link.active,
+.navbar-modern .show>.nav-link {
+  color: var(--primary-color) !important;
+  background-color: rgba(37, 99, 235, 0.05);
+}
+
+/* Dropdown Modernization */
+.dropdown-menu {
+  border: none;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  border-radius: 0.75rem;
+  padding: 0.5rem;
+  /* Fix hover gap issue: remove margin and use a safe area approach if needed, 
+     but for now reducing margin and ensuring z-index helps. 
+     Actually, the best fix for 'closing too fast' is to ensure no gap between trigger and menu. */
+  margin-top: 0 !important;
+  animation: slideIn 0.2s ease-out;
+}
+
+/* Add a transparent bridge for hover if needed, but margin-top: 0 usually fixes it. 
+   We can add a small padding-top to the menu to simulate space if we want visual separation 
+   without the physical gap. */
+.dropdown-menu {
+  margin-top: 0.25rem !important;
+  /* Small gap */
+}
+
+/* Bridge the gap using a pseudo-element on the dropdown container */
+.nav-item.dropdown:hover::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 20px;
+  /* Extends down to catch the mouse */
+  transform: translateY(100%);
+  z-index: 100;
+}
+
+.dropdown-item {
+  border-radius: 0.5rem;
+  padding: 0.6rem 1rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+}
+
+.dropdown-item:hover {
+  background-color: rgba(37, 99, 235, 0.05);
+  color: var(--primary-color);
+  transform: translateX(3px);
+}
+
+.dropdown-item i {
+  width: 20px;
+  text-align: center;
+  margin-right: 8px;
+  opacity: 0.8;
+}
+
+/* Animations */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Card Improvements */
+.card {
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 1rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}

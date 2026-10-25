@@ -1,0 +1,2 @@
+district_id,code,cbs1,cbs2,name,status,related_institution_id,infra_owner,is_fatih,faz,altyapi,infrastructure_plan,internet_type,board_owner,vestel_black_boards,vestel_grey_boards,arcelik_boards,aidata_boards,total_boards,director,director_phone,has_bt_class,bt_labs,has_infrastructure,altyapi_planlama
+1,123456,111,222,Örnek Okul,ev_sahibi,,ev_sahibi,true,Faz 1,kendi,,ADSL,ev_sahibi,5,2,1,0,8,Ahmet Yılmaz,05055555555,true,"[]",true,uyumlastirma_1 
