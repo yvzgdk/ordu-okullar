@@ -898,60 +898,80 @@ export default function InstitutionForm({ initialValues = {}, editMode = false, 
   };
 
   return (
-    <div className="d-flex justify-content-center align-items-center" key={initialValues.id || ''}>
-      <Card className="shadow-lg rounded-4 border-0 w-100" style={{ maxWidth: 1000 }}>
-        <Card.Body className="p-4 p-md-5">
-          {!guestMode && (
-            <div className="d-flex align-items-center mb-5 gap-3 border-bottom pb-4">
-              <div className="rounded-circle bg-primary bg-gradient d-flex align-items-center justify-content-center shadow-sm" style={{ width: 64, height: 64 }}>
-                <i className={`fas ${editMode ? 'fa-edit' : 'fa-plus'} fa-2x text-white`}></i>
+    <div className="w-100" key={initialValues.id || ''}>
+      <Card className="border-0 shadow-sm rounded-4 w-100 bg-white">
+        <Card.Body className="p-3 p-md-4">
+          {editMode && (
+            <div className="d-flex align-items-center mb-4 gap-3 border-bottom pb-3">
+              <div className="rounded-3 bg-primary-soft d-flex align-items-center justify-content-center shadow-sm" style={{ width: 44, height: 44, fontSize: '1.2rem' }}>
+                <i className="fas fa-edit text-primary"></i>
               </div>
               <div>
-                <h2 className="fw-bold mb-1 text-primary">{editMode ? 'Kurum Düzenle' : 'Yeni Kurum Ekle'}</h2>
-                <p className="text-muted mb-0">Kurum bilgilerini aşağıdan yönetebilirsiniz.</p>
+                <h5 className="fw-bold mb-0 text-dark">Kurum Bilgilerini Düzenle</h5>
+                <p className="text-muted small mb-0">Değişiklikleri form üzerinden güncelleyebilirsiniz.</p>
               </div>
             </div>
           )}
           <form onSubmit={handleFormSubmit}>
             {errorMsg && (
-              <Alert variant="danger" className="mb-4 shadow-sm border-0"><i className="fas fa-exclamation-circle me-2"></i>{errorMsg}</Alert>
+              <Alert variant="danger" className="mb-4 shadow-sm border-0 rounded-3">
+                <i className="fas fa-exclamation-circle me-2"></i>{errorMsg}
+              </Alert>
             )}
             <Tab.Container activeKey={activeTab} onSelect={setActiveTab}>
+              {/* Mobil Yatay Sekmeler */}
+              <Nav variant="pills" className="d-flex d-lg-none flex-nowrap overflow-auto gap-2 pb-2 mb-3 institution-tab-nav">
+                {Object.entries(FIELD_GROUPS).map(([key, group]) => (
+                  <Nav.Item key={key} className="flex-shrink-0">
+                    <Nav.Link eventKey={key} className="py-2 px-3 rounded-pill text-nowrap">
+                      {group.title}
+                    </Nav.Link>
+                  </Nav.Item>
+                ))}
+              </Nav>
+
               <Row className="g-4">
+                {/* Desktop Yan Menü Sekmeleri */}
                 <Col lg={3} className="d-none d-lg-block">
-                  <Nav variant="pills" className="flex-column gap-2 sticky-top" style={{ top: '100px' }}>
-                    {Object.entries(FIELD_GROUPS).map(([key, group]) => (
+                  <Nav variant="pills" className="flex-column gap-2 sticky-top institution-tab-nav" style={{ top: '90px' }}>
+                    {Object.entries(FIELD_GROUPS).map(([key, group], idx) => (
                       <Nav.Item key={key}>
-                        <Nav.Link eventKey={key} className="fw-bold py-3 px-4 text-start rounded-3 d-flex align-items-center gap-3">
-                          {group.title}
+                        <Nav.Link eventKey={key} className="py-3 px-3 text-start rounded-3 d-flex align-items-center justify-content-between">
+                          <span className="d-flex align-items-center gap-2">
+                            {group.title}
+                          </span>
+                          <span className="badge rounded-pill bg-light text-muted small border">{idx + 1}</span>
                         </Nav.Link>
                       </Nav.Item>
                     ))}
                   </Nav>
                 </Col>
+
+                {/* Sekme İçerikleri */}
                 <Col lg={9}>
                   <Tab.Content>
-                    {Object.entries(FIELD_GROUPS).map(([key, group]) => (
+                    {Object.entries(FIELD_GROUPS).map(([key, group], tabIndex) => (
                       <Tab.Pane key={key} eventKey={key} className="fade-in-up">
-                        <Card className="border-0 shadow-sm bg-white rounded-4 mb-4">
-                          <Card.Header className="bg-white border-0 pt-4 px-4 pb-0">
-                            <h5 className="fw-bold text-primary mb-0 d-flex align-items-center gap-2">
+                        <div className="form-section-card mb-4">
+                          <div className="form-section-header">
+                            <h6 className="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
                               {group.title}
-                            </h5>
-                          </Card.Header>
-                          <Card.Body className="p-4">
+                            </h6>
+                            <span className="badge bg-primary-soft text-primary rounded-pill px-3 py-1 small">
+                              Adım {tabIndex + 1} / 5
+                            </span>
+                          </div>
+                          <div className="p-4">
                             {key === 'infrastructure' ? (
-                              <>
-                                <Row className="g-3">
-                                  <Col md={12}>{renderField({ name: 'has_infrastructure' })}</Col>
-                                  <Col md={12}>{renderField({ name: 'infrastructure_owner' })}</Col>
-                                  <Col md={12}>{renderField({ name: 'is_fatih' })}</Col>
-                                  <Col md={6}>{renderField({ name: 'faz' })}</Col>
-                                  <Col md={6}>{renderField({ name: 'infrastructure' })}</Col>
-                                  <Col md={6}>{renderField({ name: 'altyapi_planlama' })}</Col>
-                                  <Col md={6}>{renderField({ name: 'internet_type' })}</Col>
-                                </Row>
-                              </>
+                              <Row className="g-3">
+                                <Col md={12}>{renderField({ name: 'has_infrastructure' })}</Col>
+                                <Col md={12}>{renderField({ name: 'infrastructure_owner' })}</Col>
+                                <Col md={12}>{renderField({ name: 'is_fatih' })}</Col>
+                                <Col md={6}>{renderField({ name: 'faz' })}</Col>
+                                <Col md={6}>{renderField({ name: 'infrastructure' })}</Col>
+                                <Col md={6}>{renderField({ name: 'altyapi_planlama' })}</Col>
+                                <Col md={6}>{renderField({ name: 'internet_type' })}</Col>
+                              </Row>
                             ) : (
                               <Row className="g-3">
                                 {group.fields.map((field, idx) => (
@@ -961,17 +981,18 @@ export default function InstitutionForm({ initialValues = {}, editMode = false, 
                                 ))}
                               </Row>
                             )}
-                          </Card.Body>
-                        </Card>
+                          </div>
+                        </div>
 
-                        <div className="d-flex justify-content-between mt-4">
+                        <div className="d-flex justify-content-between align-items-center mt-3 pt-2">
                           <Button
                             variant="light"
                             onClick={handlePrevious}
                             disabled={Object.keys(FIELD_GROUPS).indexOf(key) === 0}
-                            className="px-4 py-2 rounded-pill fw-bold"
+                            className="px-4 py-2 rounded-pill fw-semibold border shadow-sm d-inline-flex align-items-center gap-2"
                           >
-                            <i className="fas fa-arrow-left me-2"></i>Geri
+                            <i className="fas fa-arrow-left small"></i>
+                            <span>Önceki Adım</span>
                           </Button>
 
                           {Object.keys(FIELD_GROUPS).indexOf(key) === Object.keys(FIELD_GROUPS).length - 1 ? (
@@ -979,17 +1000,30 @@ export default function InstitutionForm({ initialValues = {}, editMode = false, 
                               variant="success"
                               type="submit"
                               disabled={loading}
-                              className="px-5 py-2 rounded-pill fw-bold shadow-sm"
+                              className="px-5 py-2 rounded-pill fw-bold shadow-sm d-inline-flex align-items-center gap-2"
+                              style={{ background: 'linear-gradient(135deg, #16a34a, #15803d)', border: 'none' }}
                             >
-                              {loading ? <Spinner size="sm" animation="border" /> : <><i className="fas fa-check me-2"></i>Kaydet</>}
+                              {loading ? (
+                                <>
+                                  <Spinner size="sm" animation="border" className="me-1" />
+                                  <span>Kaydediliyor...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <i className="fas fa-check-circle"></i>
+                                  <span>Kurumu Kaydet</span>
+                                </>
+                              )}
                             </Button>
                           ) : (
                             <Button
                               variant="primary"
                               onClick={handleNext}
-                              className="px-4 py-2 rounded-pill fw-bold shadow-sm"
+                              className="px-4 py-2 rounded-pill fw-semibold shadow-sm d-inline-flex align-items-center gap-2"
+                              style={{ background: 'linear-gradient(135deg, #2563eb, #1d4ed8)', border: 'none' }}
                             >
-                              İleri<i className="fas fa-arrow-right ms-2"></i>
+                              <span>Sonraki Adım</span>
+                              <i className="fas fa-arrow-right small"></i>
                             </Button>
                           )}
                         </div>
@@ -1002,6 +1036,8 @@ export default function InstitutionForm({ initialValues = {}, editMode = false, 
           </form>
         </Card.Body>
       </Card>
+
+
 
       <Modal show={showConfirmModal} onHide={() => setShowConfirmModal(false)} centered>
         <Modal.Header closeButton>
