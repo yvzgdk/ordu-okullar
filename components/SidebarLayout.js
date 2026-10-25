@@ -196,24 +196,8 @@ export default function SidebarLayout({ children }) {
             </div>
           </div>
 
-          {/* Sağ Taraftaki Hızlı Aksiyonlar ve Durum */}
+          {/* Sağ Taraftaki Kullanıcı Menüsü */}
           <div className="d-flex align-items-center gap-2">
-            <div className="system-status-pill d-none d-sm-flex align-items-center">
-              <span className="pulse-dot"></span>
-              <span>Supabase Bağlı</span>
-            </div>
-
-            <Link href="/institutions" className="btn btn-primary-soft btn-sm rounded-pill px-3 d-none d-md-inline-flex align-items-center gap-2">
-              <i className="fas fa-plus"></i>
-              <span>Kurum Ekle</span>
-            </Link>
-
-            <Link href="/boards/transfer" className="btn btn-success-soft btn-sm rounded-pill px-3 d-none d-lg-inline-flex align-items-center gap-2">
-              <i className="fas fa-random"></i>
-              <span>Tahta Transferi</span>
-            </Link>
-
-            {/* Kullanıcı Hızlı Menüsü */}
             <Dropdown align="end">
               <Dropdown.Toggle as="div" className="user-dropdown-toggle">
                 <div className="avatar-mini">
