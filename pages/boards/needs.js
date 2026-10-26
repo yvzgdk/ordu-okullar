@@ -11,8 +11,7 @@ const KAT_OPTIONS = [
   '5.KAT A', '5.KAT B', 'BODRUM'
 ];
 
-const YON_OPTIONS = ['Sağ', 'Sol', 'Orta', 'Yatay', 'Dikey'];
-const BOYUT_OPTIONS = ['65"', '75"', '85"', '86"', '3.40m', 'Standart'];
+const BOYUT_YON_OPTIONS = ['Sol 3.40', 'Sağ 3.40', 'Sol 2.60', 'Sağ 2.60'];
 
 export default function BoardNeedsPage() {
   const [districts, setDistricts] = useState([]);
@@ -26,8 +25,7 @@ export default function BoardNeedsPage() {
   const [formSinifLab, setFormSinifLab] = useState('');
   const [formBina, setFormBina] = useState('Ana Bina');
   const [formKat, setFormKat] = useState('');
-  const [formEtYonu, setFormEtYonu] = useState('Sağ');
-  const [formEtBoyutu, setFormEtBoyutu] = useState('75"');
+  const [formEtBoyutu, setFormEtBoyutu] = useState('Sol 3.40');
   const [formDurum, setFormDurum] = useState('Beklemede');
   const [formAciklama, setFormAciklama] = useState('');
   const [saving, setSaving] = useState(false);
@@ -157,8 +155,8 @@ export default function BoardNeedsPage() {
         bina: formBina || 'Ana Bina',
         kat: formKat || '',
         sinif_lab: formSinifLab.trim(),
-        et_yonu: formEtYonu || '',
-        et_boyutu: formEtBoyutu || '',
+        et_yonu: formEtBoyutu.startsWith('Sol') ? 'Sol' : 'Sağ',
+        et_boyutu: formEtBoyutu || 'Sol 3.40',
         durum: formDurum || 'Beklemede',
         aciklama: formAciklama.trim() || null
       };
@@ -428,44 +426,26 @@ export default function BoardNeedsPage() {
                   </Form.Floating>
                 </Col>
 
-                {/* 6. Tahta Yönü */}
-                <Col md={3}>
-                  <Form.Floating>
-                    <Form.Select
-                      id="formEtYonu"
-                      value={formEtYonu}
-                      onChange={e => setFormEtYonu(e.target.value)}
-                    >
-                      {YON_OPTIONS.map(yo => (
-                        <option key={yo} value={yo}>{yo}</option>
-                      ))}
-                    </Form.Select>
-                    <label htmlFor="formEtYonu">
-                      <i className="fas fa-compass me-2 text-muted"></i>Tahta Yönü
-                    </label>
-                  </Form.Floating>
-                </Col>
-
-                {/* 7. Tahta Boyutu */}
-                <Col md={3}>
+                {/* 6. Tahta Boyutu & Yönü */}
+                <Col md={4}>
                   <Form.Floating>
                     <Form.Select
                       id="formEtBoyutu"
                       value={formEtBoyutu}
                       onChange={e => setFormEtBoyutu(e.target.value)}
                     >
-                      {BOYUT_OPTIONS.map(bo => (
+                      {BOYUT_YON_OPTIONS.map(bo => (
                         <option key={bo} value={bo}>{bo}</option>
                       ))}
                     </Form.Select>
                     <label htmlFor="formEtBoyutu">
-                      <i className="fas fa-expand me-2 text-muted"></i>Tahta Boyutu
+                      <i className="fas fa-expand me-2 text-muted"></i>Tahta Yönü & Boyutu
                     </label>
                   </Form.Floating>
                 </Col>
 
-                {/* 8. Öncelik / Talep Durumu */}
-                <Col md={3}>
+                {/* 7. Öncelik / Talep Durumu */}
+                <Col md={4}>
                   <Form.Floating>
                     <Form.Select
                       id="formDurum"
@@ -482,8 +462,8 @@ export default function BoardNeedsPage() {
                   </Form.Floating>
                 </Col>
 
-                {/* 9. Açıklama / Gerekçe */}
-                <Col md={3}>
+                {/* 8. Açıklama / Gerekçe */}
+                <Col md={4}>
                   <Form.Floating>
                     <Form.Control
                       type="text"
@@ -671,14 +651,9 @@ export default function BoardNeedsPage() {
                           <span className="text-muted small ms-1">({item.kat || '-'})</span>
                         </td>
                         <td>
-                          <div className="d-flex align-items-center gap-1">
-                            <span className="badge bg-light text-dark border">
-                              {item.et_yonu || 'Yatay'}
-                            </span>
-                            <span className="badge bg-light text-primary border font-monospace">
-                              {item.et_boyutu || '75"'}
-                            </span>
-                          </div>
+                          <span className="badge bg-primary-soft text-primary border border-primary-subtle font-monospace fw-semibold px-2 py-1">
+                            {item.et_boyutu || 'Sol 3.40'}
+                          </span>
                         </td>
                         <td>
                           <span className={`badge-pill ${
