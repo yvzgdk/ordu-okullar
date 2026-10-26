@@ -83,7 +83,7 @@ export default function BtrEdit() {
             <Card className="shadow-sm border-0">
                 <Card.Header className="bg-white py-3">
                     <div className="d-flex justify-content-between align-items-center">
-                        <h5 className="mb-0 text-primary fw-bold"><i className="fas fa-users-cog me-2"></i>BTR / YOS Listesi ve Düzenleme</h5>
+                        <h5 className="mb-0 text-primary fw-bold"><i className="fas fa-user-graduate me-2"></i>YOS Öğretmen Listesi ve Yönetimi</h5>
                         <Button variant="success" size="sm" onClick={() => router.push('/yos-ekle')} className="rounded-pill px-3 shadow-sm d-inline-flex align-items-center gap-1">
                             <i className="fas fa-user-plus me-1"></i> YOS Ekle
                         </Button>
@@ -108,7 +108,7 @@ export default function BtrEdit() {
                         </Col>
                         <Col md={6}>
                             <Form.Group>
-                                <Form.Label className="small fw-bold text-muted">BTR Adı veya Kurum Adı</Form.Label>
+                                <Form.Label className="small fw-bold text-muted">YOS Adı veya Kurum Adı</Form.Label>
                                 <Form.Control size="sm" placeholder="İsim veya Kurum Adı arayın..." value={filterSearch} onChange={e => setFilterSearch(e.target.value)} />
                             </Form.Group>
                         </Col>

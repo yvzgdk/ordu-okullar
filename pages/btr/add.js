@@ -332,11 +332,11 @@ export default function YosAdd() {
             <span>{showFormCollapse ? 'Formu Gizle' : 'Yeni YOS Ekle'}</span>
           </Button>
           <Link
-            href="/btr-ogretmenleri"
+            href="/yos-ogretmenleri"
             className="btn btn-outline-secondary btn-sm rounded-pill px-3 d-inline-flex align-items-center gap-2 shadow-sm"
           >
             <i className="fas fa-user-graduate"></i>
-            <span>YOS / BTR Listesi</span>
+            <span>YOS Öğretmen Listesi</span>
           </Link>
           <Link
             href="/kurumlar"
@@ -1206,10 +1206,10 @@ export default function YosAdd() {
               <i className="fas fa-plus me-1"></i> Yeni Bir YOS Daha Ekle
             </Button>
             <Link
-              href="/btr-ogretmenleri"
+              href="/yos-ogretmenleri"
               className="btn btn-outline-secondary w-100 rounded-pill fw-semibold"
             >
-              <i className="fas fa-list me-1"></i> YOS / BTR Listesine Git
+              <i className="fas fa-list me-1"></i> YOS Öğretmen Listesine Git
             </Link>
           </div>
         </Modal.Body>
