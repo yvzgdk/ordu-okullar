@@ -190,7 +190,7 @@ export default function InstitutionDetailPage() {
                       : '-')
               }</div>
               <div><b>Altyapı Tipi:</b> {
-                institution?.faz && institution.faz.trim().toLowerCase().startsWith('faz')
+                institution?.faz && institution.faz.trim().toLowerCase().startsWith('faz') && institution.faz.trim().toLowerCase() !== 'faz yok'
                   ? 'Fatih Projesi'
                   : (institution?.altyapi || '-')
               }</div>

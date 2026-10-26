@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS public.kurum_kayit (
     related_institution_id bigint references public.kurum_kayit(id),
     infra_owner text,
     is_fatih boolean default false,
-    faz text,
+    faz text default 'Faz Yok',
     altyapi text,
     infrastructure_plan text,
     internet_type text,

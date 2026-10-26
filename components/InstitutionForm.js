@@ -180,8 +180,8 @@ export default function InstitutionForm({ initialValues = {}, editMode = false, 
   }, [guestMode]);
 
   useEffect(() => {
-    if (!isFatih) {
-      setFaz('');
+    if (!isFatih && (!faz || faz === '')) {
+      setFaz('Faz Yok');
     }
   }, [isFatih]);
 
@@ -600,13 +600,14 @@ export default function InstitutionForm({ initialValues = {}, editMode = false, 
           <Form.Floating className="mb-3">
             <Form.Select
               id="fazSelect"
-              value={editMode ? (initialValues.faz || '') : faz}
+              value={faz || ''}
               onChange={e => setFaz(e.target.value)}
               className="form-select border-0 shadow-sm bg-light"
               style={{ height: '3.5rem' }}
               disabled={hasInfrastructure === 'yok'}
             >
               <option value=""></option>
+              <option value="Faz Yok">Faz Yok</option>
               <option value="Faz 1">Faz 1</option>
               <option value="Faz 2">Faz 2</option>
               <option value="Faz 1250">Faz 1250</option>

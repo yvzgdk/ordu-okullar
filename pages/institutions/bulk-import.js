@@ -190,7 +190,7 @@ export default function BulkImportPage() {
       { 'Sütun Başlığı': 'Müdür Telefonu', 'Zorunlu': 'Hayır', 'Açıklama ve Kabul Edilen Değerler': 'İletişim telefon numarası (05XX XXX XX XX)' },
       { 'Sütun Başlığı': 'Altyapı Var mı?', 'Zorunlu': 'Hayır', 'Açıklama ve Kabul Edilen Değerler': 'Evet veya Hayır' },
       { 'Sütun Başlığı': 'Fatih Projesi Kapsamı', 'Zorunlu': 'Hayır', 'Açıklama ve Kabul Edilen Değerler': 'Evet veya Hayır' },
-      { 'Sütun Başlığı': 'Faz', 'Zorunlu': 'Hayır', 'Açıklama ve Kabul Edilen Değerler': 'Faz 1, Faz 2, Faz 3 veya Kapsam Dışı' },
+      { 'Sütun Başlığı': 'Faz', 'Zorunlu': 'Hayır', 'Açıklama ve Kabul Edilen Değerler': 'Faz Yok, Faz 1, Faz 2, Faz 1250, Faz 4 veya Uyumlaştırma' },
       { 'Sütun Başlığı': 'Altyapı Tipi', 'Zorunlu': 'Hayır', 'Açıklama ve Kabul Edilen Değerler': 'Yerel Ağ, Kablolu, Kablosuz veya Yok' },
       { 'Sütun Başlığı': 'İnternet Tipi', 'Zorunlu': 'Hayır', 'Açıklama ve Kabul Edilen Değerler': 'Fiber (MEB), ADSL/VDSL, LTE (GSM), Uydu veya Yok' },
       { 'Sütun Başlığı': 'Vestel Siyah Tahta', 'Zorunlu': 'Hayır', 'Açıklama ve Kabul Edilen Değerler': 'Adet (Sayısal, boş ise 0)' },
