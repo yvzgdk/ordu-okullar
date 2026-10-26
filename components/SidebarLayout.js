@@ -33,10 +33,10 @@ const MENU_GROUPS = [
     ]
   },
   {
-    title: 'BTR ÖĞRETMENLERİ',
+    title: 'BTR / YOS ÖĞRETMENLERİ',
     items: [
       { href: '/btr-ogretmenleri', legacyHref: '/btr/edit', label: 'BTR Öğretmen Listesi', icon: 'fas fa-user-graduate' },
-      { href: '/btr-ekle', legacyHref: '/btr/add', label: 'Yeni BTR Görevlendir', icon: 'fas fa-user-plus' },
+      { href: '/yos-ekle', legacyHref: '/btr/add', label: 'YOS Ekle', icon: 'fas fa-user-plus', badge: 'Yeni' },
     ]
   },
   {

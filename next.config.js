@@ -21,10 +21,14 @@ const nextConfig = {
       { source: '/tahtalar/fazlalik', destination: '/boards/surplus' },
       { source: '/tahtalar', destination: '/boards/details' },
 
-      // ─── BTR Öğretmen İşlemleri ───
+      // ─── BTR & YOS Öğretmen İşlemleri ───
       { source: '/btr-ogretmenleri', destination: '/btr/edit' },
       { source: '/btr/liste', destination: '/btr/edit' },
+      { source: '/yos-ogretmenleri', destination: '/btr/edit' },
+      { source: '/yos/liste', destination: '/btr/edit' },
       { source: '/btr-ekle', destination: '/btr/add' },
+      { source: '/yos-ekle', destination: '/btr/add' },
+      { source: '/yos/ekle', destination: '/btr/add' },
       { source: '/btr/gorevlendir', destination: '/btr/add' },
 
       // ─── İlçe, Rapor ve Sistem ───

@@ -83,9 +83,9 @@ export default function BtrEdit() {
             <Card className="shadow-sm border-0">
                 <Card.Header className="bg-white py-3">
                     <div className="d-flex justify-content-between align-items-center">
-                        <h5 className="mb-0 text-primary fw-bold"><i className="fas fa-users-cog me-2"></i>BTR Listesi ve Düzenleme</h5>
-                        <Button variant="success" size="sm" onClick={() => router.push('/btr/add')}>
-                            <i className="fas fa-plus me-1"></i> Yeni Ekle
+                        <h5 className="mb-0 text-primary fw-bold"><i className="fas fa-users-cog me-2"></i>BTR / YOS Listesi ve Düzenleme</h5>
+                        <Button variant="success" size="sm" onClick={() => router.push('/yos-ekle')} className="rounded-pill px-3 shadow-sm d-inline-flex align-items-center gap-1">
+                            <i className="fas fa-user-plus me-1"></i> YOS Ekle
                         </Button>
                     </div>
                 </Card.Header>
@@ -124,6 +124,7 @@ export default function BtrEdit() {
                                 <thead className="bg-light">
                                     <tr>
                                         <th>Ad Soyad</th>
+                                        <th>Branş</th>
                                         <th>İlçe</th>
                                         <th>Kurum</th>
                                         <th>Telefon</th>
@@ -135,6 +136,11 @@ export default function BtrEdit() {
                                     {filteredBtrs.map(btr => (
                                         <tr key={btr.id}>
                                             <td className="fw-bold">{btr.name} {btr.surname}</td>
+                                            <td>
+                                                <Badge bg="light" className="text-dark border">
+                                                    {btr.brans || '-'}
+                                                </Badge>
+                                            </td>
                                             <td>{btr.districts?.name || '-'}</td>
                                             <td>
                                                 <div className="small text-muted">{btr.kurum1?.code}</div>
