@@ -209,6 +209,32 @@ export default function InstitutionDetailPage() {
     return <Badge bg="secondary" className="px-2 py-1">{faz}</Badge>;
   };
 
+  // Altyapı Türü Tespiti (Faz 1, Faz 2, Faz 1250, Faz 4, Sıva Altı, Kendi İmkanları vb.)
+  const getInfraTypeLabel = () => {
+    if (!institution) return null;
+
+    // 1. Faz bilgisi varsa (ve 'Faz Yok' değilse)
+    const f = (institution.faz || '').trim();
+    if (f && f.toLowerCase() !== 'faz yok' && f.toLowerCase() !== 'yok') {
+      return f;
+    }
+
+    // 2. Altyapı alanı (Sıva Altı, Kendi İmkanları vb.)
+    const alt = (institution.altyapi || '').trim();
+    if (alt) {
+      const lower = alt.toLowerCase();
+      if (lower.includes('sıva') || lower.includes('siva')) return 'Sıva Altı';
+      if (lower.includes('kendi')) return 'Kendi İmkanları';
+      if (lower.includes('yerel')) return 'Yerel Ağ';
+      if (lower.includes('kablolu')) return 'Kablolu Ağ';
+      if (lower !== 'yok') return alt;
+    }
+
+    return null;
+  };
+
+  const infraType = getInfraTypeLabel();
+
   return (
     <Container fluid className="px-0">
       {/* ─── YAZDIRMA VE PDF ALANI ─── */}
@@ -327,9 +353,27 @@ export default function InstitutionDetailPage() {
                     <span className="text-muted small d-block">Altyapı Durumu</span>
                     <h5 className="fw-bold mb-0 text-dark">
                       {institution.has_infrastructure ? (
-                        <span className="text-success"><i className="fas fa-check-circle me-1"></i>Altyapı Var</span>
+                        <div className="d-flex align-items-center gap-2 flex-wrap">
+                          <span className="text-success d-inline-flex align-items-center">
+                            <i className="fas fa-check-circle me-1"></i>Altyapı Var
+                          </span>
+                          {infraType && (
+                            <Badge bg="info" className="px-2 py-1 text-white fw-semibold" style={{ fontSize: '0.78rem' }}>
+                              {infraType}
+                            </Badge>
+                          )}
+                        </div>
                       ) : (
-                        <span className="text-muted"><i className="fas fa-circle-xmark me-1"></i>Altyapı Yok</span>
+                        <div className="d-flex align-items-center gap-2 flex-wrap">
+                          <span className="text-muted d-inline-flex align-items-center">
+                            <i className="fas fa-circle-xmark me-1"></i>Altyapı Yok
+                          </span>
+                          {infraType && (
+                            <Badge bg="secondary" className="px-2 py-1" style={{ fontSize: '0.78rem' }}>
+                              {infraType}
+                            </Badge>
+                          )}
+                        </div>
                       )}
                     </h5>
                   </div>
@@ -457,9 +501,16 @@ export default function InstitutionDetailPage() {
                 <div className="d-flex flex-column gap-2 small">
                   <div className="d-flex justify-content-between py-1 border-bottom">
                     <span className="text-muted">Altyapı Durumu:</span>
-                    <Badge bg={institution.has_infrastructure ? 'success' : 'secondary'}>
-                      {institution.has_infrastructure ? 'Mevcut' : 'Yok'}
-                    </Badge>
+                    <div>
+                      <Badge bg={institution.has_infrastructure ? 'success' : 'secondary'} className="me-1">
+                        {institution.has_infrastructure ? 'Mevcut' : 'Yok'}
+                      </Badge>
+                      {infraType && (
+                        <Badge bg="info" className="text-white">
+                          {infraType}
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                   <div className="d-flex justify-content-between py-1 border-bottom">
                     <span className="text-muted">Fatih Projesi Kapsamı:</span>
