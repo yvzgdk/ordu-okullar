@@ -102,6 +102,8 @@ export default function InstitutionForm({ initialValues = {}, editMode = false, 
   // 1. State ekle
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [savedInstitutionInfo, setSavedInstitutionInfo] = useState(null);
   const [showDuplicateModal, setShowDuplicateModal] = useState(false);
   const [bds, setBds] = useState('');
 
@@ -204,8 +206,21 @@ export default function InstitutionForm({ initialValues = {}, editMode = false, 
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
+
+    // Zorunlu alan kontrolü
+    const errors = [];
+    if (!name.trim()) errors.push('Kurum Adı boş bırakılamaz.');
+    if (!code.trim()) errors.push('Kurum Kodu boş bırakılamaz.');
+    if (!districtId) errors.push('Lütfen bir İlçe seçiniz.');
+
+    if (errors.length > 0) {
+      setErrorMsg(errors.join(' '));
+      setShowErrorModal(true);
+      return;
+    }
+
     if (code) {
-       const { data } = await supabase.from('kurum_kayit').select('id, name').eq('code', code).maybeSingle();
+       const { data } = await supabase.from('kurum_kayit').select('id, name').eq('code', code.trim()).maybeSingle();
        if (data && (!editMode || String(data.id) !== String(initialValues.id))) {
           setShowDuplicateModal(true);
           return;
@@ -214,10 +229,41 @@ export default function InstitutionForm({ initialValues = {}, editMode = false, 
     setShowConfirmModal(true);
   };
 
+  const resetForm = () => {
+    setDistrictId('');
+    setCode('');
+    setCbs1('');
+    setCbs2('');
+    setName('');
+    setBds('');
+    setStatus('ev_sahibi');
+    setRelatedInstitutionId('');
+    setInfraOwner('');
+    setIsFatih(false);
+    setFaz('Faz Yok');
+    setAltyapi('');
+    setAltyapiPlan('');
+    setInternetType('');
+    setBoardOwner('');
+    setVestelBlack(0);
+    setVestelGrey(0);
+    setArcelik(0);
+    setAidata(0);
+    setDirector('');
+    setDirectorPhone('');
+    setHasBtClass('');
+    setBtLabs([]);
+    setHasInfrastructure('');
+    setAltyapiPlanlama('');
+    setActiveTab('basic');
+    setErrorMsg('');
+  };
+
   const handleConfirmedSubmit = async () => {
     setShowConfirmModal(false);
     setLoading(true);
     setError(null);
+    setErrorMsg('');
 
     try {
       // Eğer ev sahibi + misafir kurum seçildiyse ve seçilen kurumun status'ü ev_sahibi ise, onu misafir yap
@@ -233,16 +279,16 @@ export default function InstitutionForm({ initialValues = {}, editMode = false, 
 
       const institution = {
         district_id: districtId ? Number(districtId) : null,
-        code,
+        code: code.trim(),
         cbs1,
         cbs2,
-        name,
+        name: name.trim(),
         bds: bds !== '' ? Number(bds) : null,
         status,
         related_institution_id: relatedInstitutionId ? Number(relatedInstitutionId) : null,
         infra_owner: infraOwner,
         is_fatih: !!isFatih,
-        faz: faz,
+        faz: faz || 'Faz Yok',
         altyapi: altyapi,
         infrastructure_plan: altyapiPlan,
         internet_type: internetType,
@@ -292,38 +338,18 @@ export default function InstitutionForm({ initialValues = {}, editMode = false, 
         console.log('UPDATE result:', { data, error, id: initialValues.id, filteredInstitution });
 
         if (!error) {
-          if (onSuccess) onSuccess(data?.[0] || null);
+          const savedRow = data?.[0] || filteredInstitution;
+          const distName = districts.find(d => String(d.id) === String(districtId))?.name || '';
+          setSavedInstitutionInfo({
+            ...savedRow,
+            districtName: distName
+          });
+
+          if (onSuccess) onSuccess(savedRow);
           // SWR cache'ini yenile
           mutate('institutions');
           setErrorMsg('');
           setShowSuccessModal(true);
-          // Formu temizle
-          setDistrictId('');
-          setCode('');
-          setCbs1('');
-          setCbs2('');
-          setName('');
-          setBds('');
-          setStatus('');
-          setRelatedInstitutionId('');
-          setInfraOwner('');
-          setIsFatih(false);
-          setFaz('');
-          setAltyapi('');
-          setAltyapiPlan('');
-          setInternetType('');
-          setBoardOwner('ev_sahibi');
-          setVestelBlack(0);
-          setVestelGrey(0);
-          setArcelik(0);
-          setAidata(0);
-          setDirector('');
-          setDirectorPhone('');
-          setHasBtClass('yok');
-          setBtLabs([]);
-          setHasInfrastructure('var');
-          setAltyapiPlanlama('yok');
-          setActiveTab('basic');
         } else {
           throw error;
         }
@@ -339,7 +365,14 @@ export default function InstitutionForm({ initialValues = {}, editMode = false, 
         console.log('INSERT result:', { data, error, filteredInstitution });
 
         if (!error) {
-          if (onSuccess) onSuccess(data?.[0] || null);
+          const savedRow = data?.[0] || filteredInstitution;
+          const distName = districts.find(d => String(d.id) === String(districtId))?.name || '';
+          setSavedInstitutionInfo({
+            ...savedRow,
+            districtName: distName
+          });
+
+          if (onSuccess) onSuccess(savedRow);
           // SWR cache'ini yenile
           mutate('institutions');
           setErrorMsg('');
@@ -350,7 +383,8 @@ export default function InstitutionForm({ initialValues = {}, editMode = false, 
       }
     } catch (error) {
       console.error('Form submission error:', error);
-      setErrorMsg(error.message || 'Bir hata oluştu');
+      setErrorMsg(error.message || 'Kayıt sırasında bir hata oluştu');
+      setShowErrorModal(true);
     } finally {
       setLoading(false);
     }
@@ -1040,71 +1074,222 @@ export default function InstitutionForm({ initialValues = {}, editMode = false, 
 
 
 
-      <Modal show={showConfirmModal} onHide={() => setShowConfirmModal(false)} centered>
-        <Modal.Header closeButton>
-          <Modal.Title>Kurum Kaydedilecek</Modal.Title>
+      {/* 1. ONAY MODALI */}
+      <Modal show={showConfirmModal} onHide={() => setShowConfirmModal(false)} centered backdrop="static">
+        <Modal.Header closeButton className="border-0 pb-0">
+          <div className="d-flex align-items-center gap-2 text-primary">
+            <span
+              className="rounded-circle bg-primary-soft d-flex align-items-center justify-content-center"
+              style={{ width: 36, height: 36 }}
+            >
+              <i className="fas fa-clipboard-check text-primary"></i>
+            </span>
+            <Modal.Title className="h6 mb-0 fw-bold text-dark">
+              {editMode ? 'Kurum Güncellemesini Onayla' : 'Yeni Kurum Kaydını Onayla'}
+            </Modal.Title>
+          </div>
         </Modal.Header>
-        <Modal.Body>
-          <p className="mb-4">Emin misiniz?</p>
-          <div className="d-flex justify-content-end gap-3">
-            <Button variant="secondary" onClick={() => setShowConfirmModal(false)}>Hayır</Button>
-            <Button variant="primary" onClick={handleConfirmedSubmit}>Evet</Button>
+        <Modal.Body className="py-3">
+          <p className="text-secondary small mb-3">
+            Aşağıdaki bilgilere sahip kurum kaydı {editMode ? 'güncellenecektir' : 'veritabanına kaydedilecektir'}. Onaylıyor musunuz?
+          </p>
+
+          <div className="card bg-light border-0 rounded-3 p-3 mb-3">
+            <div className="row g-2 small">
+              <div className="col-5 text-muted fw-semibold">Kurum Adı:</div>
+              <div className="col-7 fw-bold text-primary">{name || '-'}</div>
+
+              <div className="col-5 text-muted fw-semibold">Kurum Kodu:</div>
+              <div className="col-7"><Badge bg="dark">{code || '-'}</Badge></div>
+
+              <div className="col-5 text-muted fw-semibold">İlçe:</div>
+              <div className="col-7 fw-bold text-dark">
+                {districts.find(d => String(d.id) === String(districtId))?.name || '-'}
+              </div>
+
+              <div className="col-5 text-muted fw-semibold">Kurum Durumu:</div>
+              <div className="col-7">
+                <Badge bg={status === 'misafir' ? 'warning' : 'success'}>
+                  {status === 'misafir' ? 'Misafir Kurum' : 'Ev Sahibi'}
+                </Badge>
+              </div>
+
+              <div className="col-5 text-muted fw-semibold">Derslik Sayısı (BDS):</div>
+              <div className="col-7 fw-bold text-dark">{bds || '-'}</div>
+
+              <div className="col-5 text-muted fw-semibold">Faz Durumu:</div>
+              <div className="col-7">
+                <Badge bg="info">{faz || 'Faz Yok'}</Badge>
+              </div>
+
+              <div className="col-5 text-muted fw-semibold">Toplam Tahta:</div>
+              <div className="col-7 fw-bold text-dark">{totalBoards} Adet</div>
+
+              <div className="col-5 text-muted fw-semibold">Yetkili / Müdür:</div>
+              <div className="col-7 text-dark">{director || '-'}</div>
+            </div>
+          </div>
+        </Modal.Body>
+        <Modal.Footer className="border-0 pt-0">
+          <Button
+            variant="outline-secondary"
+            className="rounded-pill px-3"
+            onClick={() => setShowConfirmModal(false)}
+            disabled={loading}
+          >
+            Vazgeç
+          </Button>
+          <Button
+            variant="success"
+            className="rounded-pill px-4 fw-semibold shadow-sm d-inline-flex align-items-center gap-2"
+            onClick={handleConfirmedSubmit}
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <Spinner size="sm" animation="border" />
+                <span>Kaydediliyor...</span>
+              </>
+            ) : (
+              <>
+                <i className="fas fa-check"></i>
+                <span>{editMode ? 'Evet, Güncelle' : 'Evet, Kaydet'}</span>
+              </>
+            )}
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* 2. BAŞARI MODALI */}
+      <Modal show={showSuccessModal} onHide={() => setShowSuccessModal(false)} centered backdrop="static">
+        <Modal.Body className="text-center py-4 px-4">
+          <div
+            className="rounded-circle bg-success-soft d-inline-flex align-items-center justify-content-center mb-3 shadow-sm"
+            style={{ width: 68, height: 68 }}
+          >
+            <i className="fas fa-circle-check text-success fa-2x"></i>
+          </div>
+          <h5 className="fw-bold text-dark mb-1">
+            {editMode ? 'Kurum Bilgileri Başarıyla Güncellendi!' : 'Kurum Başarıyla Kaydedildi!'}
+          </h5>
+          <p className="text-muted small mb-3">
+            Kurum kaydı veritabanına başarıyla işlendi.
+          </p>
+
+          {savedInstitutionInfo && (
+            <div className="p-3 bg-light rounded-3 text-start small border mb-3">
+              <div className="mb-1">
+                <span className="text-muted">Kurum Adı:</span>{' '}
+                <strong className="text-primary">{savedInstitutionInfo.name}</strong>
+              </div>
+              <div className="mb-1">
+                <span className="text-muted">Kurum Kodu:</span>{' '}
+                <Badge bg="dark" className="ms-1">{savedInstitutionInfo.code}</Badge>
+              </div>
+              <div className="mb-1">
+                <span className="text-muted">İlçe:</span>{' '}
+                <strong>{savedInstitutionInfo.districtName}</strong>
+              </div>
+              <div className="mb-1">
+                <span className="text-muted">Faz:</span>{' '}
+                <Badge bg="info" className="ms-1">{savedInstitutionInfo.faz || 'Faz Yok'}</Badge>
+              </div>
+              <div>
+                <span className="text-muted">Toplam Tahta:</span>{' '}
+                <strong>{savedInstitutionInfo.total_boards || 0} Adet</strong>
+              </div>
+            </div>
+          )}
+
+          <div className="d-flex flex-column gap-2">
+            {!editMode ? (
+              <>
+                <Button
+                  variant="primary"
+                  className="w-100 rounded-pill fw-semibold shadow-sm"
+                  onClick={() => {
+                    setShowSuccessModal(false);
+                    resetForm();
+                  }}
+                >
+                  <i className="fas fa-plus me-1"></i> Yeni Bir Kurum Daha Ekle
+                </Button>
+                <Link
+                  href="/kurumlar"
+                  className="btn btn-outline-secondary w-100 rounded-pill fw-semibold"
+                >
+                  <i className="fas fa-list me-1"></i> Kurum Detay Listesine Git
+                </Link>
+              </>
+            ) : (
+              <Link
+                href="/kurumlar"
+                className="btn btn-primary w-100 rounded-pill fw-semibold shadow-sm"
+              >
+                <i className="fas fa-list me-1"></i> Kurum Detay Listesine Dön
+              </Link>
+            )}
           </div>
         </Modal.Body>
       </Modal>
 
-      <Modal show={showSuccessModal} onHide={() => setShowSuccessModal(false)} centered>
-        <Modal.Header closeButton>
-          <Modal.Title>Kurum Kaydedildi</Modal.Title>
+      {/* 3. HATA / UYARI MODALI */}
+      <Modal show={showErrorModal} onHide={() => setShowErrorModal(false)} centered>
+        <Modal.Header closeButton className="border-0 pb-0">
+          <div className="d-flex align-items-center gap-2 text-danger">
+            <span
+              className="rounded-circle bg-danger-soft d-flex align-items-center justify-content-center"
+              style={{ width: 36, height: 36 }}
+            >
+              <i className="fas fa-triangle-exclamation text-danger"></i>
+            </span>
+            <Modal.Title className="h6 mb-0 fw-bold text-dark">Kayıt Uyarısı / Hata</Modal.Title>
+          </div>
         </Modal.Header>
-        <Modal.Body>
-          <p className="mb-4">Kurum başarıyla kaydedildi.</p>
-          <div className="d-flex justify-content-end">
-            <Button variant="primary" onClick={() => {
-              setShowSuccessModal(false);
-              setActiveTab('basic');
-              setDistrictId('');
-              setCode('');
-              setCbs1('');
-              setCbs2('');
-              setName('');
-              setBds('');
-              setStatus('');
-              setRelatedInstitutionId('');
-              setInfraOwner('');
-              setIsFatih(false);
-              setFaz('');
-              setAltyapi('');
-              setAltyapiPlan('');
-              setInternetType('');
-              setBoardOwner('');
-              setVestelBlack(0);
-              setVestelGrey(0);
-              setArcelik(0);
-              setAidata(0);
-              setDirector('');
-              setDirectorPhone('');
-              setHasBtClass('');
-              setBtLabs([]);
-              setHasInfrastructure('');
-              setAltyapiPlanlama('');
-            }}>Tamam</Button>
+        <Modal.Body className="py-3">
+          <div className="alert alert-danger mb-0 rounded-3">
+            <i className="fas fa-exclamation-circle me-2"></i>
+            {errorMsg}
           </div>
         </Modal.Body>
+        <Modal.Footer className="border-0 pt-0">
+          <Button
+            variant="secondary"
+            className="rounded-pill px-4"
+            onClick={() => setShowErrorModal(false)}
+          >
+            Anladım, Kapat
+          </Button>
+        </Modal.Footer>
       </Modal>
 
-
-
+      {/* 4. MÜKERRER KAYIT MODALI */}
       <Modal show={showDuplicateModal} onHide={() => setShowDuplicateModal(false)} centered>
-        <Modal.Header closeButton className="bg-danger text-white">
-          <Modal.Title><i className="fas fa-exclamation-triangle me-2"></i>Mükerrer Kayıt</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <p className="mb-4">Girdiğiniz <strong>{code}</strong> kurum koduna sahip bir kurum zaten sistemde kayıtlı. Lütfen farklı bir kurum kodu giriniz.</p>
-          <div className="d-flex justify-content-end">
-            <Button variant="secondary" onClick={() => setShowDuplicateModal(false)}>Tamam</Button>
+        <Modal.Header closeButton className="border-0 pb-0">
+          <div className="d-flex align-items-center gap-2 text-warning">
+            <span
+              className="rounded-circle bg-warning-soft d-flex align-items-center justify-content-center"
+              style={{ width: 36, height: 36 }}
+            >
+              <i className="fas fa-exclamation-triangle text-warning"></i>
+            </span>
+            <Modal.Title className="h6 mb-0 fw-bold text-dark">Mükerrer Kurum Kodu</Modal.Title>
           </div>
+        </Modal.Header>
+        <Modal.Body className="py-3">
+          <p className="mb-0 text-secondary small">
+            Girdiğiniz <strong className="text-dark">{code}</strong> kurum koduna sahip bir okul sistemde zaten kayıtlı. Lütfen kurum kodunu kontrol ediniz veya mevcut kaydı düzenleyiniz.
+          </p>
         </Modal.Body>
+        <Modal.Footer className="border-0 pt-0">
+          <Button
+            variant="warning"
+            className="rounded-pill px-4 fw-semibold text-dark"
+            onClick={() => setShowDuplicateModal(false)}
+          >
+            Tamam
+          </Button>
+        </Modal.Footer>
       </Modal>
 
       <style jsx global>{`
