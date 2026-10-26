@@ -63,6 +63,10 @@ CREATE TABLE IF NOT EXISTS public.et_detay (
     et_yonu text,
     et_boyutu text,
     et_durumu text default 'Kullanımda',
+    is_transferred boolean default false,
+    transfer_tarihi date,
+    resmi_yazi_no text,
+    transfer_from bigint references public.kurum_kayit(id) on delete set null,
     created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
@@ -89,6 +93,7 @@ CREATE TABLE IF NOT EXISTS public.board_transfers (
     count integer not null default 1,
     from_institution_id bigint references public.kurum_kayit(id) on delete set null,
     to_institution_id bigint references public.kurum_kayit(id) on delete set null,
+    official_letter_no text,
     created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 

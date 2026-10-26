@@ -116,7 +116,7 @@ export default function BoardTransferPage() {
     setLoadingTransfers(true);
     const { data, error } = await supabase
       .from('board_transfers')
-      .select('id, date, board_type, count, from_institution_id, to_institution_id')
+      .select('id, date, board_type, count, from_institution_id, to_institution_id, official_letter_no')
       .order('date', { ascending: false })
       .order('id', { ascending: false });
     if (!error) {
@@ -369,6 +369,7 @@ export default function BoardTransferPage() {
                count: countsByType[type],
                from_institution_id: parseInt(sourceId, 10),
                to_institution_id: parseInt(targetId, 10),
+               official_letter_no: officialLetterNo.trim(),
             });
          }
       }
@@ -1038,6 +1039,11 @@ export default function BoardTransferPage() {
                             <i className="fas fa-calendar-day text-muted small"></i>
                             <span className="fw-semibold text-dark">{tr.date}</span>
                           </div>
+                          {tr.official_letter_no && (
+                            <div className="small text-muted font-monospace mt-1">
+                              <i className="fas fa-file-lines me-1 text-secondary"></i>{tr.official_letter_no}
+                            </div>
+                          )}
                         </td>
                         <td>
                           <span className="badge bg-light text-dark border font-monospace">
