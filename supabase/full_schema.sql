@@ -63,6 +63,8 @@ CREATE TABLE IF NOT EXISTS public.et_detay (
     et_yonu text,
     et_boyutu text,
     et_durumu text default 'Kullanımda',
+    calisiyor_mu boolean default true,
+    aciklama text,
     is_transferred boolean default false,
     transfer_tarihi date,
     resmi_yazi_no text,
