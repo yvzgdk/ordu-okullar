@@ -1,7 +1,8 @@
 // components/InstitutionForm.js
 
 import { useState, useEffect } from 'react';
-import { Form, Button, Row, Col, Alert, Card, Modal, Nav, Tab, Spinner } from 'react-bootstrap';
+import Link from 'next/link';
+import { Form, Button, Row, Col, Alert, Card, Modal, Nav, Tab, Spinner, Badge } from 'react-bootstrap';
 import { supabase } from '../lib/supabase';
 import { mutate } from 'swr';
 import { useRouter } from 'next/router';
