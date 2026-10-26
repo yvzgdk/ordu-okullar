@@ -35,9 +35,13 @@ export default function BoardNeedsPage() {
   const [filterDistrict, setFilterDistrict] = useState('');
   const [filterDurum, setFilterDurum] = useState('Tümü');
   
-  // Modal State'leri
+  // Modal / Pop-Up State'leri
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showValidationModal, setShowValidationModal] = useState(false);
+  const [validationMessage, setValidationMessage] = useState('');
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
+  const [successDetails, setSuccessDetails] = useState(null);
+  
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -94,6 +98,11 @@ export default function BoardNeedsPage() {
     return institutions.filter(i => String(i.district_id) === String(formDistrictId));
   }, [institutions, formDistrictId]);
 
+  // Seçilen form kurumu
+  const selectedFormInst = useMemo(() => {
+    return institutions.find(i => String(i.id) === String(formInstitutionId));
+  }, [institutions, formInstitutionId]);
+
   // İstatistiksel Özetler
   const stats = useMemo(() => {
     const total = needs.length;
@@ -132,19 +141,28 @@ export default function BoardNeedsPage() {
     });
   }, [needs, getInstitutionObj, filterSearch, filterDistrict, filterDurum]);
 
-  // ─── Yeni İhtiyaç Kaydetme ───
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  // ─── 1. Butona Basıldığında Doğrulama ve Onay Pop-up'ı Başlatma ───
+  const handleInitiateSave = () => {
     if (!formInstitutionId) {
-      alert('Lütfen bir kurum seçiniz.');
+      setValidationMessage('Lütfen önce etkileşimli tahta ihtiyacı olan Okulu seçiniz.');
+      setShowValidationModal(true);
       return;
     }
     if (!formSinifLab.trim()) {
-      alert('Lütfen ihtiyacı olan sınıf / derslik bilgisini giriniz.');
+      setValidationMessage('Lütfen ihtiyacı olan Sınıf / Laboratuvar bilgisini giriniz (Örn: 9/A, Bilişim Lab).');
+      setShowValidationModal(true);
       return;
     }
 
+    // Doğrulamalar başarılı -> Onay modalını aç
+    setShowConfirmModal(true);
+  };
+
+  // ─── 2. Onay Modalı Onaylandığında Kesin Kaydetme ───
+  const handleConfirmSave = async () => {
+    setShowConfirmModal(false);
     setSaving(true);
+
     try {
       const selectedInst = institutions.find(i => String(i.id) === String(formInstitutionId));
       const districtId = formDistrictId || selectedInst?.district_id || null;
@@ -164,17 +182,28 @@ export default function BoardNeedsPage() {
       const { error } = await supabase.from('et_ihtiyac').insert([payload]);
       if (error) throw error;
 
-      // Temizle
+      // Başarı detayını ayarla
+      setSuccessDetails({
+        schoolName: selectedInst?.name || 'Okul',
+        sinifLab: payload.sinif_lab,
+        boyut: payload.et_boyutu,
+        bina: payload.bina,
+        kat: payload.kat || 'Belirtilmedi'
+      });
+
+      // Form alanlarını temizle
       setFormSinifLab('');
       setFormKat('');
       setFormAciklama('');
-      setSuccessMessage(`${selectedInst?.name || 'Kurum'} için ${payload.sinif_lab} dersliğine ET ihtiyaç talebi başarıyla kaydedildi.`);
-      setShowSuccessModal(true);
 
       // Listeyi anında yenile
       fetchNeeds();
+
+      // Başarı modalını göster
+      setShowSuccessModal(true);
     } catch (err) {
-      alert('Kayıt oluşturulurken hata meydana geldi: ' + err.message);
+      setValidationMessage('Kayıt oluşturulurken veritabanı hatası oluştu: ' + err.message);
+      setShowValidationModal(true);
     } finally {
       setSaving(false);
     }
@@ -321,7 +350,7 @@ export default function BoardNeedsPage() {
           </div>
 
           <div className="p-4">
-            <Form onSubmit={handleSubmit}>
+            <Form onSubmit={e => { e.preventDefault(); handleInitiateSave(); }}>
               <Row className="g-3">
                 {/* 1. İlçe Seçimi */}
                 <Col md={4}>
@@ -481,11 +510,12 @@ export default function BoardNeedsPage() {
 
               <div className="d-flex align-items-center justify-content-end gap-2 mt-4">
                 <Button
-                  type="submit"
+                  type="button"
                   variant="primary"
-                  disabled={saving || !formInstitutionId || !formSinifLab.trim()}
-                  className="rounded-pill px-5 shadow-sm fw-semibold d-inline-flex align-items-center gap-2"
-                  style={{ height: 48 }}
+                  onClick={handleInitiateSave}
+                  disabled={saving}
+                  className="rounded-pill px-5 shadow fw-semibold d-inline-flex align-items-center gap-2"
+                  style={{ height: 48, fontSize: '1rem' }}
                 >
                   {saving ? (
                     <>
@@ -747,32 +777,150 @@ export default function BoardNeedsPage() {
         </div>
       </div>
 
-      {/* ─── MODAL 1: BAŞARI MODALI ─── */}
-      <Modal show={showSuccessModal} onHide={() => setShowSuccessModal(false)} centered>
+      {/* ============================================================ */}
+      {/* ─── POP-UP 1: EKSİK ALAN / DOĞRULAMA UYARI MODALI ─── */}
+      {/* ============================================================ */}
+      <Modal show={showValidationModal} onHide={() => setShowValidationModal(false)} centered>
         <div className="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
-          <div className="modal-header bg-success text-white border-0 py-3 px-4">
+          <div className="modal-header bg-warning text-dark border-0 py-3 px-4">
             <div className="d-flex align-items-center gap-2">
-              <i className="fas fa-circle-check fa-lg"></i>
-              <h5 className="modal-title fw-bold mb-0">İhtiyaç Talebi Kaydedildi</h5>
+              <i className="fas fa-triangle-exclamation fa-lg text-dark"></i>
+              <h5 className="modal-title fw-bold mb-0">Eksik Bilgi Uyarısı</h5>
             </div>
-            <button type="button" className="btn-close btn-close-white" onClick={() => setShowSuccessModal(false)}></button>
+            <button type="button" className="btn-close" onClick={() => setShowValidationModal(false)}></button>
           </div>
           <div className="modal-body p-4 text-center">
-            <div className="avatar-mini mx-auto mb-3 bg-success-soft text-success" style={{ width: 64, height: 64, fontSize: '2rem', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyItems: 'center', justifyContent: 'center' }}>
-              <i className="fas fa-check"></i>
+            <div className="avatar-mini mx-auto mb-3 bg-warning-soft text-warning" style={{ width: 64, height: 64, fontSize: '1.75rem', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <i className="fas fa-circle-exclamation"></i>
             </div>
-            <h6 className="fw-bold mb-2 text-dark">Kayıt Başarıyla Oluşturuldu</h6>
-            <p className="text-muted small mb-0">{successMessage}</p>
+            <h6 className="fw-bold mb-2 text-dark">Lütfen Alanı Doldurunuz</h6>
+            <p className="text-muted mb-0">{validationMessage}</p>
           </div>
           <div className="modal-footer border-0 bg-light px-4 py-3 justify-content-center">
-            <Button variant="success" className="rounded-pill px-4 fw-semibold" onClick={() => setShowSuccessModal(false)}>
-              Tamam
+            <Button variant="primary" className="rounded-pill px-4" onClick={() => setShowValidationModal(false)}>
+              Tamam, Seçiyorum
             </Button>
           </div>
         </div>
       </Modal>
 
-      {/* ─── MODAL 2: SİLME ONAY MODALI ─── */}
+      {/* ============================================================ */}
+      {/* ─── POP-UP 2: İŞLEMİ ONAYLIYOR MUSUNUZ? (EMİN MİSİNİZ?) ─── */}
+      {/* ============================================================ */}
+      <Modal show={showConfirmModal} onHide={() => !saving && setShowConfirmModal(false)} centered>
+        <div className="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+          <div className="modal-header bg-primary text-white border-0 py-3 px-4">
+            <div className="d-flex align-items-center gap-2">
+              <i className="fas fa-question-circle fa-lg"></i>
+              <h5 className="modal-title fw-bold mb-0">İhtiyaç Talebi Onayı</h5>
+            </div>
+            <button type="button" className="btn-close btn-close-white" disabled={saving} onClick={() => setShowConfirmModal(false)}></button>
+          </div>
+          <div className="modal-body p-4">
+            <div className="text-center mb-3">
+              <div className="avatar-mini mx-auto mb-2 bg-primary-soft text-primary" style={{ width: 60, height: 60, fontSize: '1.75rem', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <i className="fas fa-clipboard-question"></i>
+              </div>
+              <h6 className="fw-bold text-dark mb-1">Talebi Onaylıyor musunuz?</h6>
+              <p className="text-muted small mb-0">Aşağıdaki ihtiyaç talebi sisteme kaydedilecek ve takip listesine eklenecektir:</p>
+            </div>
+
+            <Card className="border shadow-none rounded-3 mb-3 bg-light">
+              <Card.Body className="p-3">
+                <div className="mb-2">
+                  <div className="small text-muted fw-bold text-uppercase">Okul Bilgisi:</div>
+                  <div className="fw-bold text-dark">{selectedFormInst?.name}</div>
+                  <div className="small text-muted">İlçe: {getDistrictName(selectedFormInst?.district_id)} | Kod: {selectedFormInst?.code || '-'}</div>
+                </div>
+                <hr className="my-2" />
+                <div className="row g-2 small">
+                  <div className="col-6">
+                    <span className="text-muted">Sınıf/Derslik:</span> <strong className="text-primary">{formSinifLab}</strong>
+                  </div>
+                  <div className="col-6">
+                    <span className="text-muted">Yön & Boyut:</span> <strong className="font-monospace text-dark">{formEtBoyutu}</strong>
+                  </div>
+                  <div className="col-6">
+                    <span className="text-muted">Bina / Kat:</span> <strong>{formBina} ({formKat || 'Belirtilmedi'})</strong>
+                  </div>
+                  <div className="col-6">
+                    <span className="text-muted">Öncelik:</span> <strong>{formDurum}</strong>
+                  </div>
+                  {formAciklama && (
+                    <div className="col-12 mt-1">
+                      <span className="text-muted">Açıklama:</span> <em>"{formAciklama}"</em>
+                    </div>
+                  )}
+                </div>
+              </Card.Body>
+            </Card>
+          </div>
+          <div className="modal-footer border-0 bg-light px-4 py-3 justify-content-end gap-2">
+            <Button variant="secondary" className="rounded-pill px-4" disabled={saving} onClick={() => setShowConfirmModal(false)}>
+              Vazgeç
+            </Button>
+            <Button 
+              variant="primary" 
+              className="rounded-pill px-4 fw-bold shadow-sm d-inline-flex align-items-center gap-2"
+              disabled={saving}
+              onClick={handleConfirmSave}
+            >
+              {saving ? (
+                <>
+                  <Spinner size="sm" animation="border" />
+                  <span>Kaydediliyor...</span>
+                </>
+              ) : (
+                <>
+                  <i className="fas fa-check"></i>
+                  <span>Evet, Talebi Kaydet</span>
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* ============================================================ */}
+      {/* ─── POP-UP 3: İŞLEM TAMAMLANDI BAŞARI MODALI ─── */}
+      {/* ============================================================ */}
+      <Modal show={showSuccessModal} onHide={() => setShowSuccessModal(false)} centered>
+        <div className="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+          <div className="modal-header bg-success text-white border-0 py-3 px-4">
+            <div className="d-flex align-items-center gap-2">
+              <i className="fas fa-circle-check fa-lg"></i>
+              <h5 className="modal-title fw-bold mb-0">İşlem Tamamlandı!</h5>
+            </div>
+            <button type="button" className="btn-close btn-close-white" onClick={() => setShowSuccessModal(false)}></button>
+          </div>
+          <div className="modal-body p-4 text-center">
+            <div className="avatar-mini mx-auto mb-3 bg-success-soft text-success" style={{ width: 72, height: 72, fontSize: '2.25rem', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <i className="fas fa-check"></i>
+            </div>
+            <h5 className="fw-bold mb-2 text-dark">İhtiyaç Talebi Başarıyla Oluşturuldu</h5>
+            <p className="text-muted small mb-3">
+              <strong>{successDetails?.schoolName}</strong> okulu, <strong>{successDetails?.sinifLab}</strong> dersliği için <strong>{successDetails?.boyut}</strong> ebatında ET ihtiyaç talebi sisteme işlendi.
+            </p>
+            <div className="p-3 bg-light rounded-3 border text-start small">
+              <div className="text-muted mb-1">
+                <strong>Yerleşim:</strong> {successDetails?.bina} - Kat: {successDetails?.kat}
+              </div>
+              <div className="text-muted">
+                <strong>Durum:</strong> <span className="badge bg-warning-subtle text-warning">Beklemede</span>
+              </div>
+            </div>
+          </div>
+          <div className="modal-footer border-0 bg-light px-4 py-3 justify-content-center">
+            <Button variant="success" className="rounded-pill px-5 fw-bold shadow-sm" onClick={() => setShowSuccessModal(false)}>
+              Tamam, Harika
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* ============================================================ */}
+      {/* ─── POP-UP 4: SİLME ONAY MODALI ─── */}
+      {/* ============================================================ */}
       <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)} centered>
         <div className="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
           <div className="modal-header bg-danger text-white border-0 py-3 px-4">
