@@ -17,6 +17,8 @@ const nextConfig = {
       { source: '/tahtalar/ekle', destination: '/boards/add' },
       { source: '/tahtalar/liste', destination: '/boards/details' },
       { source: '/tahtalar/transfer', destination: '/boards/transfer' },
+      { source: '/tahtalar/ihtiyac', destination: '/boards/needs' },
+      { source: '/tahtalar/fazlalik', destination: '/boards/surplus' },
       { source: '/tahtalar', destination: '/boards/details' },
 
       // ─── BTR Öğretmen İşlemleri ───

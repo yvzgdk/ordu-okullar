@@ -27,7 +27,9 @@ const MENU_GROUPS = [
     items: [
       { href: '/tahtalar/ekle', legacyHref: '/boards/add', label: 'Kat/Sınıf Tahta Ekle', icon: 'fas fa-chalkboard' },
       { href: '/tahtalar/liste', legacyHref: '/boards/details', label: 'Kurum Tahta Listesi', icon: 'fas fa-list-check' },
-      { href: '/tahtalar/transfer', legacyHref: '/boards/transfer', label: 'Okullar Arası Transfer', icon: 'fas fa-arrows-split-up-and-left', badge: 'Yeni' },
+      { href: '/tahtalar/transfer', legacyHref: '/boards/transfer', label: 'Okullar Arası Transfer', icon: 'fas fa-arrows-split-up-and-left' },
+      { href: '/tahtalar/ihtiyac', legacyHref: '/boards/needs', label: 'ET İhtiyaç', icon: 'fas fa-clipboard-question', badge: 'Yeni' },
+      { href: '/tahtalar/fazlalik', legacyHref: '/boards/surplus', label: 'ET Fazlalık', icon: 'fas fa-boxes-stacked', badge: 'Yeni' },
     ]
   },
   {
